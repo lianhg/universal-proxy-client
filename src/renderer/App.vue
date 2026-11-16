@@ -1189,15 +1189,22 @@ function gotoTab(key: TabKey) { activeTab.value = key; menuOpen.value = false }
 
 /* 编辑态 / 已保存自定义布局：解除栅格，模块绝对定位自由排布 */
 .home-canvas.home--edit, .home-canvas.has-custom { position:relative; display:block; }
-.home-canvas.home--edit > .home-mod, .home-canvas.has-custom > .home-mod { position:absolute; }
-.home-canvas.home--edit > .home-mod { outline:1px dashed var(--border-strong); outline-offset:2px; border-radius:12px; }
+.home-canvas.home--edit > .home-mod, .home-canvas.has-custom > .home-mod { position:absolute; margin:0; padding:0; }
+/* 选中框必须与卡片严丝合缝：outline-offset 归零，不再给模块加 padding 让位。
+   历史问题：以前用 padding-top:6px + hero 的 padding-left:48px 给手柄腾地方，
+   box-sizing:border-box 会让卡片整体内缩 48px、变矮 6px —— 拖动框、卡片、缩放手柄三套边界对不上。 */
+.home-canvas.home--edit > .home-mod { outline:1px dashed var(--border-strong); outline-offset:0; border-radius:12px; }
 .home-canvas.home--edit > .home-mod .card, .home-canvas.has-custom > .home-mod .card { height:100%; }
-/* 编辑态给标题让位，避免被拖动手柄盖住 */
-.home-canvas.home--edit .sec-title, .home-canvas.has-custom .sec-title,
-.home-canvas.home--edit .sites-header, .home-canvas.has-custom .sites-header,
-.home-canvas.home--edit .monitor-title, .home-canvas.has-custom .monitor-title { padding-left:48px; }
-.home-canvas.home--edit > .home-mod, .home-canvas.has-custom > .home-mod { padding-top:6px; }
-.home-canvas.home--edit > .home-mod[data-mod^="hero"] { padding-left:48px; padding-top:8px; }
+/* 模块盒子 = 卡片盒子：内部的卡片/横带一律撑满，拖多大卡片就多大 */
+.home-canvas.home--edit > .home-mod, .home-canvas.has-custom > .home-mod { display:flex; flex-direction:column; }
+.home-canvas.home--edit > .home-mod > .dash, .home-canvas.has-custom > .home-mod > .dash { flex:1 1 auto; min-height:0; }
+.home-canvas.home--edit > .home-mod > .dash > .card,
+.home-canvas.home--edit > .home-mod > .dash > .dash-top,
+.home-canvas.home--edit > .home-mod > .dash > .power-cell,
+.home-canvas.has-custom > .home-mod > .dash > .card,
+.home-canvas.has-custom > .home-mod > .dash > .dash-top,
+.home-canvas.has-custom > .home-mod > .dash > .power-cell { flex:1 1 auto; min-height:0; }
+.home-canvas.home--edit > .home-mod > .hub-strip, .home-canvas.has-custom > .home-mod > .hub-strip { flex:1 1 auto; min-height:0; margin-bottom:0; }
 
 /* DashboardHero 拆成独立卡片后，内部旧布局系统已退役（编辑态不可达，手柄永不渲染），无需再屏蔽 */
 
@@ -1209,12 +1216,15 @@ function gotoTab(key: TabKey) { activeTab.value = key; menuOpen.value = false }
 /* 拖动手柄（模块左上角）与缩放手柄（右下角）：只有点「编辑布局」进入编辑态才出现；
    平时完全隐藏且不接收点击，卡片是固定展示态，避免误拖打乱已排好的布局 */
 .mod-grip {
-  position:absolute; top:6px; left:6px; z-index:6; display:flex; align-items:center; gap:5px;
-  padding:3px 9px; border-radius:7px; background:var(--accent); color:#fff; font-size:11px; cursor:move;
-  user-select:none; box-shadow:0 1px 5px rgba(0,0,0,.35); touch-action:none;
+  /* 统一贴在卡片上边线外侧：底边贴住卡片顶边，高 16px 正好放进模块间距，
+     所有模块位置完全一致，也不遮卡片里的任何内容（以前在卡片内左上角，会盖住标题）。 */
+  position:absolute; top:0; left:0; transform:translateY(-100%); z-index:6;
+  display:flex; align-items:center; gap:4px; height:16px; padding:0 7px;
+  border-radius:6px 6px 0 0; background:var(--accent); color:#fff; font-size:10px; line-height:1;
+  cursor:move; user-select:none; white-space:nowrap; touch-action:none;
   opacity:0; pointer-events:none; transition:opacity .12s;
 }
-.mod-grip::before { content:'⠿'; font-size:13px; line-height:1; }
+.mod-grip::before { content:'⠿'; font-size:11px; line-height:1; }
 .mod-resize {
   position:absolute; right:3px; bottom:3px; width:16px; height:16px; z-index:6; cursor:nwse-resize;
   border-right:2px solid var(--text-muted); border-bottom:2px solid var(--text-muted); touch-action:none;
@@ -1223,8 +1233,9 @@ function gotoTab(key: TabKey) { activeTab.value = key; menuOpen.value = false }
 .home-canvas.home--edit .mod-grip { opacity:1; pointer-events:auto; }
 .home-canvas.home--edit .mod-resize { opacity:1; }
 .home-canvas.home--edit .mod-grip, .home-canvas.home--edit .mod-resize { box-shadow:0 0 0 1px rgba(59,130,246,.4); }
-/* 编辑态下整卡提示可拖：虚线框 + 轻微上浮，和平时展示态区分开 */
-.home-canvas.home--edit > .home-mod:hover { box-shadow:0 0 0 2px var(--accent), 0 6px 18px rgba(0,0,0,.25); }
+/* 编辑态下整卡提示可拖：虚线框 + 轻微上浮，和平时展示态区分开。
+   高亮用 inset 描边画在卡片内侧，不会让卡片看起来被放大一圈。 */
+.home-canvas.home--edit > .home-mod:hover { box-shadow:inset 0 0 0 2px var(--accent), 0 6px 18px rgba(0,0,0,.25); }
 
 /* ─── 汉堡菜单（取消常驻导航栏后的功能入口弹层）─── */
 .menu-mask { position:fixed; inset:0; background:rgba(4,12,24,.55); display:flex; align-items:flex-start; justify-content:center; z-index:90; padding-top:60px; -webkit-app-region:no-drag; }

@@ -140,6 +140,29 @@ t('只有点了「编辑布局」才显示拖动手柄并能拖动（平时固�
   assert.match(app, /拖左上角「⠿ 拖动」移动/, '编辑态未提示拖动手柄位置');
 });
 
+t('模块盒子 = 卡片盒子：编辑态不再用 padding 给手柄让位（否则卡片内缩、和拖动框大小不一致）', () => {
+  // 历史 bug：padding-top:6px / hero 的 padding-left:48px 在 border-box 下直接吃掉卡片尺寸，
+  // 结果虚线框、卡片、缩放手柄三套边界各差 6~48px，看起来「拖动的框和卡片不一样大」。
+  assert.ok(!/\.home-canvas\.home--edit > \.home-mod, \.home-canvas\.has-custom > \.home-mod \{ padding-top:6px/.test(app), '编辑态又给模块加 padding-top 了');
+  assert.ok(!/\[data-mod\^="hero"\] \{ padding-left:48px/.test(app), 'hero 模块又用 padding-left 给手柄让位了');
+  assert.ok(!/\.monitor-title \{ padding-left:48px/.test(app), '标题又在为手柄让位');
+  // 选中框必须与卡片严丝合缝
+  assert.match(app, /\.home-canvas\.home--edit > \.home-mod \{ outline:1px dashed var\(--border-strong\); outline-offset:0;/, '选中框仍外扩，视觉上比卡片大一圈');
+  // 模块是 flex 容器，内部卡片/横带撑满，拖多大卡片就多大
+  assert.match(app, /\.home-canvas\.home--edit > \.home-mod, \.home-canvas\.has-custom > \.home-mod \{ display:flex; flex-direction:column; \}/, '模块未改成 flex 容器，内部卡片不会撑满');
+  assert.match(app, /\.home-mod > \.dash \{ flex:1 1 auto; min-height:0; \}/, 'hero 卡片未撑满模块');
+  assert.match(app, /\.home-mod > \.dash > \.card,[\s\S]{0,400}\.power-cell \{ flex:1 1 auto; min-height:0; \}/, '卡片/横带未撑满模块');
+});
+
+t('拖动手柄统一贴在卡片上边线外侧：所有模块位置与尺寸一致，且不遮内容', () => {
+  const grip = app.slice(app.indexOf('.mod-grip {'), app.indexOf('.mod-grip::before'));
+  assert.match(grip, /top:0; left:0; transform:translateY\(-100%\)/, '手柄未统一贴卡片上沿（各卡片会高低不一）');
+  assert.match(grip, /height:16px/, '手柄高度未固定，卡片之间会出现大小的视觉差');
+  assert.ok(!/top:6px; left:6px/.test(grip), '手柄又回到卡片内左上角，会盖住卡片标题');
+  // 悬停高亮用 inset 描边，画在卡片内侧，不会让卡片看起来被放大
+  assert.match(app, /\.home-canvas\.home--edit > \.home-mod:hover \{ box-shadow:inset 0 0 0 2px var\(--accent\)/, '悬停高亮仍外扩，卡片看起来比拖动框大');
+});
+
 console.log(`\n===== 结果：${pass} 通过 / ${fail} 失败 =====`);
 if (fail) {
   for (const [name, e] of failures) console.error(`  ${name}: ${e?.message ?? e}`);

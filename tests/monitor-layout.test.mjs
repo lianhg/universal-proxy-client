@@ -83,6 +83,14 @@ t('只有点了「编辑布局」才显示拖动手柄并能拖动（平时固�
   assert.match(mon, /if \(moved\) persistLayout\(\)[\s\S]{0,120}else if \(ensureMade\) layout\.value = \{\}/, '拖完未自动保存 / 没拖未还原');
 });
 
+t('手柄与选中框和模块边界一致（与首页同一套视觉，不遮内容、不放大模块）', () => {
+  assert.match(mon, /\.panel--edit \.ml-mod \{ outline:1px dashed var\(--border-strong\); outline-offset:0;/, '选中框仍外扩，视觉上比模块大一圈');
+  const grip = mon.slice(mon.indexOf('.mod-grip {'), mon.indexOf('.mod-grip span'));
+  assert.match(grip, /top:0; left:0; transform:translateY\(-100%\)/, '手柄未统一贴模块上沿');
+  assert.match(grip, /height:16px/, '手柄高度未固定，模块之间会出现大小差异');
+  assert.ok(!/border-radius:0 var\(--radius-md\) 0 var\(--radius-md\)/.test(grip), '手柄仍是卡片内直角标签，会盖住模块标题');
+});
+
 console.log(`\n===== 结果：${pass} 通过 / ${fail} 失败 =====`);
 if (fail) {
   for (const [name, e] of failures) console.error(`  ${name}: ${e?.message ?? e}`);
