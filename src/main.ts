@@ -1,4 +1,4 @@
-﻿import { app, BrowserWindow, ipcMain, shell, nativeTheme } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, nativeTheme } from 'electron'
 import path from 'path'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -276,7 +276,7 @@ ipcMain.handle('fetch-subscription', async (_evt, url: string) => {
 
 /* --------------------- IP 归属地查询（geo:lookup） --------------------- */
 /*
- * 亮哥要求节点列表按 IP 显示代理国家图标。节点名里没写地区的（如「未知-SS-09」），
+ * 需求：节点列表按 IP 显示代理国家图标。节点名里没写地区的（如「未知-SS-09」），
  * 只能查真实归属地——这里向免费归属地服务发起真实 HTTPS 查询：
  * - 不用任何本地地址段表去「推断」（那必然出错，等于编数据）
  * - 逐个尝试多个服务，单个 6s 超时，哪个通用哪个（粘性记忆，减少后续请求）
@@ -396,7 +396,7 @@ ipcMain.handle('runtime:set-mode', (_evt, mode: RuntimeMode) => {
  * 运行层 IPC 兜底。
  *
  * 启动 / 断开 / 切换节点都会写配置、起进程、改系统代理。任何一处未预期异常如果让
- * IPC promise 直接 reject，渲染层只会看到「点了没反应」——2026-11-12 亮哥反馈的
+ * IPC promise 直接 reject，渲染层只会看到「点了没反应」——2026-11-12 用户反馈的
  * 「切换节点失败」里就有一半属于这种静默失败。这里保证永远返回 { ok, status, error }。
  */
 function guarded<A extends unknown[], T extends object>(

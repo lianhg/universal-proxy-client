@@ -2,7 +2,7 @@
  * 屏幕二维码取图（透明框选 / 整屏截图）回归测试
  * 运行：node tests/qr-region.test.mjs
  *
- * 亮哥反馈：点「框选屏幕区域」后只在窗口里看到一块空白，还可能报 Not supported，
+ * 用户反馈：点「框选屏幕区域」后只在窗口里看到一块空白，还可能报 Not supported，
  * 根本看不见屏幕上那张二维码。根因是 Electron 渲染层拿不到 getDisplayMedia。
  *
  * 这里锁死新方案的三条红线：

@@ -4,10 +4,11 @@ import subprocess
 import tempfile
 import shutil
 
-CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 项目根，随仓库位置自动推导
+CHROME = os.environ.get("CHROME_PATH") or r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 # 构建产物 index.html 已使用相对资源路径，可直接用 file:// 打开，无需本地服务
-BASE = "file:///E:/AAAAA/Codex/VPN/dist/index.html"
-OUT = r"E:\AAAAA\Codex\VPN\tests\ui-smoke"
+BASE = "file:///" + (ROOT.replace(os.sep, "/") + "/dist/index.html").replace(" ", "%20")
+OUT = os.path.join(ROOT, "tests", "ui-smoke")
 TABS = {
     # 首页同时校验状态条与仪表盘四块真实内容
     "home": ["内核运行：", "节点信息", "快捷操作", "节点列表", "开始连接", "等待真实采样"],
