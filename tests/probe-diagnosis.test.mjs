@@ -33,7 +33,7 @@ const ctx = (extra = {}) => ({
   kernel: 'xray', nodeName: 'HK-01', ...extra,
 });
 
-/** 亮哥截图里的真实形态：境外经代理通、境内只有直连通 */
+/** 真实案例里的典型形态：境外经代理通、境内只有直连通 */
 const screenshotRows = () => [
   row('google.com', BAD('timeout'), OK()),
   row('youtube.com', BAD('timeout'), OK()),

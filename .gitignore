@@ -10,6 +10,10 @@ release/
 # 测试运行输出（ui_smoke.py 生成的截图）
 tests/ui-smoke/
 
+# Python 测试缓存
+__pycache__/
+*.pyc
+
 # 日志与临时文件
 *.log
 debug.log
