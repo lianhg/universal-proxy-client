@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>全能代理助手 · 界面设计稿（10 页）</title>
+<style>
+:root{
+  --bg:#0b1120; --bg2:#0f1a2e; --elev:#111d32; --inset:#0d1a2d;
+  --bd:#1e3a5f; --bd2:#2d4a6f;
+  --tx:#e2e8f0; --tx2:#94a3b8; --tx3:#64748b; --tx4:#475569;
+  --blue:#3b82f6; --blue2:#60a5fa; --green:#22c55e; --purple:#a855f7;
+  --orange:#f59e0b; --red:#ef4444; --cyan:#22d3ee;
+  --font:"Microsoft YaHei","PingFang SC",-apple-system,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1402px;height:1122px;overflow:hidden;background:#050a14}
+body{font-family:var(--font);color:var(--tx);-webkit-font-smoothing:antialiased}
+.page{width:1402px;height:1122px;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.upper{display:flex;flex:1;min-height:0}
+
+/* ── sidebar ── */
+.sidebar{width:188px;min-width:188px;background:linear-gradient(180deg,#0d1a2d 0%,#122035 100%);border-right:1px solid var(--bd);display:flex;flex-direction:column}
+.logo-area{display:flex;align-items:center;gap:10px;padding:18px 14px 16px;border-bottom:1px solid rgba(30,58,95,.6)}
+.logo-mark{width:34px;height:34px;flex:none}
+.logo-t{font-size:15px;font-weight:700;letter-spacing:.5px;color:#f1f5f9}
+.logo-v{font-size:11px;color:var(--tx3);margin-top:2px}
+.nav-list{padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.nav-item{height:70px;display:flex;align-items:center;gap:11px;padding:0 12px 0 15px;border-left:3px solid transparent;cursor:default;transition:.15s}
+.nav-item.active{background:linear-gradient(90deg,#1d4ed8 0%,#2563eb 55%,rgba(37,99,235,.15) 100%);border-left-color:#60a5fa;border-radius:0 8px 8px 0}
+.nav-ico{width:22px;height:22px;flex:none;color:#8ba3c0}
+.nav-item.active .nav-ico{color:#fff}
+.nav-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nav-t{font-size:13px;font-weight:500;color:#c6d4e5;white-space:nowrap}
+.nav-item.active .nav-t{color:#fff;font-weight:700}
+.nav-s{font-size:10px;color:var(--tx3);white-space:nowrap}
+.nav-item.active .nav-s{color:#bfdbfe}
+.side-foot{margin-top:auto;padding:12px 12px 14px;border-top:1px solid rgba(30,58,95,.6)}
+.theme-btn{display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;background:rgba(30,58,95,.35);color:var(--tx2);font-size:12px}
+.theme-sun{width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);flex:none;box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.chev{margin-left:auto;color:var(--tx3);font-size:13px}
+
+/* ── main / topbar ── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg2)}
+.topbar{height:52px;min-height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--inset);border-bottom:1px solid var(--bd)}
+.crumb{display:flex;align-items:baseline;gap:10px}
+.crumb b{font-size:15px;font-weight:600;color:var(--tx)}
+.crumb span{font-size:11px;color:var(--tx3)}
+.top-actions{display:flex;align-items:center;gap:8px}
+.tbtn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;color:var(--tx2);font-size:12px}
+.tbtn svg{width:13px;height:13px}
+.wbtns{display:flex;gap:2px;margin-left:8px}
+.wbtn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--tx3);border-radius:5px}
+.wbtn svg{width:14px;height:14px}
+.wbtn:hover{background:rgba(30,58,95,.6)}
+.view{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;padding:14px 18px;overflow:hidden}
+.view>*{flex-shrink:0}
+.fill{flex:1;min-height:0}
+
+/* ── footer ── */
+.footer{height:32px;min-height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--inset);border-top:1px solid var(--bd);font-size:12px;color:var(--tx3)}
+.f-l,.f-r{display:flex;align-items:center;gap:8px;flex:1}
+.f-r{justify-content:flex-end}
+.f-c{flex:1;text-align:center}
+.f-c strong,.f-r strong{color:var(--tx2);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.dot.g{background:var(--green);box-shadow:0 0 6px rgba(34,197,94,.6)}
+.sig{display:flex;align-items:flex-end;gap:2px;height:13px}
+.sig i{width:3px;background:var(--green);border-radius:1px;display:block}
+
+/* ── generic ── */
+.card{background:linear-gradient(135deg,var(--elev) 0%,var(--inset) 100%);border:1px solid var(--bd);border-radius:12px;padding:14px;min-height:0;overflow:hidden}
+.card.flat{background:var(--inset)}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-t{font-size:14px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:7px}
+.card-t .mi{width:16px;height:16px;color:var(--blue2)}
+.more{font-size:11px;color:var(--tx3)}
+.row{display:flex;gap:14px;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;min-height:0}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;min-height:0}
+.g23{display:grid;grid-template-columns:2fr 1fr;gap:14px;min-height:0}
+.g32{display:grid;grid-template-columns:1fr 2fr;gap:14px;min-height:0}
+.muted{color:var(--tx2)}.dim{color:var(--tx3)}.mono{font-family:var(--mono)}
+.tiny{font-size:11px}.sm{font-size:12px}.md{font-size:13px}.lg{font-size:15px}
+.big{font-size:26px;font-weight:700;line-height:1.15}
+.xbig{font-size:34px;font-weight:700;line-height:1.1}
+.blue{color:var(--blue2)}.green{color:var(--green)}.purple{color:#c084fc}.orange{color:var(--orange)}.red{color:var(--red)}.cyan{color:var(--cyan)}
+.hr{height:1px;background:var(--bd);margin:10px 0}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+.tag.g{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.tag.b{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.tag.o{background:rgba(245,158,11,.14);color:#fbbf24;border:1px solid rgba(245,158,11,.25)}
+.tag.p{background:rgba(168,85,247,.14);color:#c084fc;border:1px solid rgba(168,85,247,.25)}
+.tag.r{background:rgba(239,68,68,.14);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.tag.gray{background:rgba(100,116,139,.14);color:#94a3b8;border:1px solid rgba(100,116,139,.25)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--tx2);font-size:12px;font-family:var(--font);white-space:nowrap;cursor:default}
+.btn.primary{background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-color:#3b82f6;color:#fff;font-weight:600}
+.btn.pill{border-radius:20px;padding:9px 22px}
+.btn.sm{padding:5px 11px;font-size:11px;border-radius:6px}
+.btn.green{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.35);color:#4ade80}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171}
+.inp,.sel{padding:7px 11px;border:1px solid var(--bd);border-radius:7px;background:var(--inset);color:var(--tx);font-size:12px;font-family:var(--font);outline:none}
+.inp::placeholder{color:var(--tx4)}
+.sel{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
+.bar{height:7px;border-radius:4px;background:rgba(30,58,95,.9);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:4px;background:var(--blue)}
+.bar>i.g{background:var(--green)}.bar>i.p{background:var(--purple)}.bar>i.o{background:var(--orange)}.bar>i.c{background:var(--cyan)}
+.sw{width:36px;height:20px;border-radius:12px;background:#334155;position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#94a3b8}
+.sw.on{background:var(--blue)}
+.sw.on::after{left:19px;background:#fff}
+.seg{display:inline-flex;padding:3px;background:var(--inset);border:1px solid var(--bd);border-radius:9px;gap:3px}
+.seg>button{padding:6px 15px;border:0;border-radius:6px;background:transparent;color:var(--tx3);font-size:12px;font-family:var(--font)}
+.seg>button.on{background:var(--blue);color:#fff;font-weight:600}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.tbl th{text-align:left;padding:8px 9px;color:var(--tx3);font-weight:500;font-size:11px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.tbl td{padding:8px 9px;color:var(--tx2);border-bottom:1px solid rgba(30,58,95,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.hi td{background:rgba(59,130,246,.09)}
+.tbl td b{color:var(--tx);font-weight:500}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:12px;border-bottom:1px solid rgba(30,58,95,.4)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--tx3)}
+.kv span:last-child{color:var(--tx);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid var(--bd);border-radius:7px;background:rgba(30,58,95,.25);font-size:11px;color:var(--tx2)}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--blue2);display:block}
+.hint{font-size:11px;color:var(--tx3);line-height:1.6}
+.mini-ico{width:14px;height:14px;vertical-align:-2px;margin-right:5px;color:var(--tx3)}
+.center{display:flex;align-items:center;justify-content:center;flex-direction:column}
+.between{display:flex;align-items:center;justify-content:space-between}
+.stat-l{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px}
+.stat-v{font-size:24px;font-weight:700;margin-top:8px;color:var(--tx)}
+.stat-sub{font-size:11px;color:var(--tx3);margin-top:5px}
+.spark{width:100%;height:100%;display:block}
+.grid-line{stroke:rgba(30,58,95,.7);stroke-width:1}
+.axis-t{fill:#64748b;font-size:10px;font-family:var(--font)}
+
+/* page-specific */
+.conn{display:flex;align-items:center;gap:14px;height:100%}
+.conn-check{width:46px;height:46px;border-radius:50%;background:rgba(34,197,94,.18);display:flex;align-items:center;justify-content:center;flex:none}
+.accel{background:linear-gradient(115deg,rgba(37,99,235,.55),rgba(29,78,216,.28) 55%,rgba(13,26,45,.9));position:relative;display:flex;flex-direction:column;justify-content:center;padding-left:22px}
+.accel::after{content:"";position:absolute;right:-20px;top:-30px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.18),transparent 65%)}
+.ov-num{font-size:30px;font-weight:700;color:var(--tx);line-height:1.1;text-align:center}
+.pie-legend{display:flex;flex-direction:column;gap:9px;font-size:12px;color:var(--tx2)}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+.site-row{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px;border-bottom:1px solid rgba(30,58,95,.35)}
+.site-row:last-child{border-bottom:0}
+.site-ic{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none;color:#fff}
+.qr-frame{width:300px;height:300px;position:relative;border:1px dashed rgba(96,165,250,.5);border-radius:14px;background:rgba(13,26,45,.6)}
+.qr-frame .corner{position:absolute;width:26px;height:26px;border:3px solid var(--blue2)}
+.qr-frame .c1{top:-2px;left:-2px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+.qr-frame .c2{top:-2px;right:-2px;border-left:0;border-bottom:0;border-radius:0 12px 0 0}
+.qr-frame .c3{bottom:-2px;left:-2px;border-right:0;border-top:0;border-radius:0 0 0 12px}
+.qr-frame .c4{bottom:-2px;right:-2px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+.qr-scanline{position:absolute;left:14px;right:14px;top:44%;height:2px;background:linear-gradient(90deg,transparent,#60a5fa,transparent);box-shadow:0 0 14px 3px rgba(96,165,250,.35)}
+.qr-grid{position:absolute;inset:44px;background-image:linear-gradient(rgba(96,165,250,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,.07) 1px,transparent 1px);background-size:18px 18px;border-radius:4px}
+.log-wrap{background:#080f1d;border:1px solid var(--bd);border-radius:9px;padding:10px 12px;font-family:var(--mono);font-size:11.5px;line-height:2.0;height:100%;overflow:hidden}
+.log-line{display:flex;gap:10px;white-space:nowrap}
+.log-ts{color:#475569;flex:none}
+.lv{width:46px;flex:none;font-weight:600}
+.lv.info{color:#38bdf8}.lv.warn{color:#fbbf24}.lv.err{color:#f87171}.lv.ok{color:#4ade80}
+.log-mod{width:104px;flex:none;color:#a78bfa}
+.log-msg{color:#94a3b8;overflow:hidden;text-overflow:ellipsis}
+.set-cat{display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:8px;font-size:12px;color:var(--tx2);border:1px solid transparent}
+.set-cat.on{background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.35);color:#bfdbfe;font-weight:600}
+.set-cat svg{width:15px;height:15px}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 2px;border-bottom:1px solid rgba(30,58,95,.4)}
+.set-row:last-child{border-bottom:0}
+.set-t{font-size:13px;color:var(--tx);margin-bottom:4px}
+.set-d{font-size:11px;color:var(--tx3)}
+.set-grp{font-size:12px;color:var(--blue2);font-weight:600;margin:16px 0 4px;display:flex;align-items:center;gap:7px}
+.set-grp:first-child{margin-top:0}
+.node-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px}
+.app-ic{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:7px;flex:none;border:1px solid rgba(255,255,255,.12)}
+.rank-row{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:11px}
+.rank-n{width:16px;color:var(--tx3);font-family:var(--mono)}
+.rank-name{width:76px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-bar{flex:1}
+.rank-v{width:56px;text-align:right;color:var(--tx);font-family:var(--mono)}
+.metric{display:flex;align-items:center;gap:12px}
+.metric-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.metric-ic svg{width:19px;height:19px}
+.overview{display:grid;grid-template-columns:repeat(2,280px);gap:18px;justify-content:center;padding:16px}
+.ovcard{background:var(--inset);border:1px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer}
+.ovcard img{width:280px;height:224px;object-fit:cover;object-position:top left;display:block;border-bottom:1px solid var(--bd)}
+.ovcard .cap{padding:8px 10px;font-size:12px;color:var(--tx2);display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<!-- ============ 01 首页 / 实时状态 ============ -->
+<section class="page" data-title="首页" data-sub="实时状态">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+
+  <div class="g3" style="height:112px">
+    <div class="card" style="display:flex;align-items:center">
+      <div class="conn" style="width:100%">
+        <div class="conn-check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>
+        <div><div class="green" style="font-size:27px;font-weight:700">已连接</div><div class="sm muted" style="margin-top:6px">当前节点：香港 · 01 &nbsp;|&nbsp; 延迟：28 ms</div></div>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;padding-bottom:0">
+      <div><div class="stat-l"><span class="blue" style="font-size:15px">&#8595;</span> 下载速度</div><div class="big blue" style="margin-top:6px">12.6 <span style="font-size:14px;font-weight:400">MB/s</span></div></div>
+      <svg class="spark" viewBox="0 0 260 48" preserveAspectRatio="none" style="height:44px"><path d="M0 38 L22 34 L44 37 L66 26 L88 30 L110 18 L132 24 L154 14 L176 20 L198 8 L220 14 L240 5 L260 10 L260 48 L0 48Z" fill="rgba(59,130,246,.13)"/><path d="M0 38 L22 34 L44 37 L66 26 L88 30 L110 18 L132 24 L154 14 L176 20 L198 8 L220 14 L240 5 L260 10" fill="none" stroke="#3b82f6" stroke-width="2"/></svg>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;padding-bottom:0">
+      <div><div class="stat-l"><span class="purple" style="font-size:15px">&#8593;</span> 上传速度</div><div class="big purple" style="margin-top:6px">8.3 <span style="font-size:14px;font-weight:400">MB/s</span></div></div>
+      <svg class="spark" viewBox="0 0 260 48" preserveAspectRatio="none" style="height:44px"><path d="M0 32 L20 24 L40 30 L60 14 L80 28 L100 10 L120 22 L140 6 L160 26 L180 12 L200 30 L220 8 L240 20 L260 4 L260 48 L0 48Z" fill="rgba(168,85,247,.12)"/><path d="M0 32 L20 24 L40 30 L60 14 L80 28 L100 10 L120 22 L140 6 L160 26 L180 12 L200 30 L220 8 L240 20 L260 4" fill="none" stroke="#a855f7" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <div class="g3" style="height:196px">
+    <div class="card accel">
+      <div class="between" style="align-items:flex-start">
+        <div><div style="font-size:19px;font-weight:700;color:#dbeafe">&#128640; 代理加速中</div><div class="sm" style="color:#bfdbfe;margin-top:8px">畅享全球网络</div></div>
+      </div>
+      <button class="btn primary pill" style="align-self:flex-start;margin-top:22px;padding:10px 30px;font-size:13px">&#9211; 断开连接</button>
+    </div>
+    <div class="card">
+      <div class="card-t"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>代理状态概览</div>
+      <div class="row" style="height:130px;align-items:center">
+        <div style="flex:1;text-align:center"><div class="green" style="font-size:27px">&#9989;</div><div class="ov-num" style="margin-top:8px">100%</div><div class="tiny dim" style="margin-top:6px">代理生效率</div></div>
+        <div style="width:1px;height:70px;background:var(--bd)"></div>
+        <div style="flex:1;text-align:center"><div class="blue" style="font-size:27px">&#127760;</div><div class="ov-num" style="margin-top:8px">4 / 6</div><div class="tiny dim" style="margin-top:6px">网站走代理</div></div>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;padding-bottom:0">
+      <div><div class="card-t">&#128200; 今日流量统计</div>
+        <div class="row sm muted" style="margin-top:14px;gap:20px"><span class="green">&#8593; 上传：<b style="color:var(--tx);font-size:15px">1.2 GB</b></span><span class="blue">&#8595; 下载：<b style="color:var(--tx);font-size:15px">3.8 GB</b></span></div>
+      </div>
+      <svg class="spark" viewBox="0 0 300 80" preserveAspectRatio="none" style="height:88px"><path d="M0 62 L25 52 L50 58 L75 38 L100 46 L125 30 L150 42 L175 22 L200 34 L225 16 L250 28 L275 12 L300 20 L300 80 L0 80Z" fill="rgba(34,197,94,.13)"/><path d="M0 62 L25 52 L50 58 L75 38 L100 46 L125 30 L150 42 L175 22 L200 34 L225 16 L250 28 L275 12 L300 20" fill="none" stroke="#22c55e" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <div class="card" style="height:372px">
+    <div class="card-h" style="margin-bottom:10px">
+      <div class="card-t"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h3l2-6 3 12 2.5-9 2 5h2l1.5-2H22"/></svg>网络连接监控 <span class="green sm" style="display:flex;align-items:center;gap:6px;font-weight:400"><i class="dot g"></i>实时监控中...</span></div>
+      <div style="display:flex;gap:8px"><div class="sel" style="padding:5px 26px 5px 10px;font-size:11px">全部应用</div><button class="btn sm">&#128465; 清空记录</button></div>
+    </div>
+    <table class="tbl">
+      <colgroup><col style="width:15%"><col style="width:8%"><col style="width:21%"><col style="width:7%"><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:10%"><col style="width:7%"></colgroup>
+      <thead><tr><th>进程名称</th><th>PID</th><th>目标地址</th><th>端口</th><th>代理状态</th><th>使用节点</th><th>匹配规则</th><th>上传 / 下载</th><th>时间</th></tr></thead>
+      <tbody>
+        <tr><td><b><span class="app-ic" style="background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0)"></span>Chrome</b></td><td class="mono tiny">8424</td><td>www.google.com</td><td class="mono tiny">443</td><td><span class="tag g">&#9679; 代理</span></td><td>香港 · 01</td><td>国外网站</td><td class="tiny mono">&#8593;128K &#8595;256K</td><td class="tiny mono dim">10:24:36</td></tr>
+        <tr><td><b><span class="app-ic" style="background:linear-gradient(135deg,#0f7ec4,#38b48b)"></span>Edge</b></td><td class="mono tiny">7568</td><td>www.youtube.com</td><td class="mono tiny">443</td><td><span class="tag g">&#9679; 代理</span></td><td>香港 · 01</td><td>国外网站</td><td class="tiny mono">&#8593;210K &#8595;420K</td><td class="tiny mono dim">10:24:35</td></tr>
+        <tr><td><b><span class="app-ic" style="background:#2aabee"></span>Telegram</b></td><td class="mono tiny">6212</td><td>t.me</td><td class="mono tiny">443</td><td><span class="tag g">&#9679; 代理</span></td><td>香港 · 01</td><td>应用规则</td><td class="tiny mono">&#8593;85K &#8595;120K</td><td class="tiny mono dim">10:24:33</td></tr>
+        <tr><td><b><span class="app-ic" style="background:#07c160"></span>微信</b></td><td class="mono tiny">5120</td><td>wx.qq.com</td><td class="mono tiny">443</td><td><span class="tag b">&#9679; 直连</span></td><td class="dim">—</td><td>国内网站</td><td class="tiny mono">&#8593;72K &#8595;96K</td><td class="tiny mono dim">10:24:30</td></tr>
+        <tr><td><b><span class="app-ic" style="background:#2a475e"></span>Steam</b></td><td class="mono tiny">4876</td><td>store.steampowered.com</td><td class="mono tiny">443</td><td><span class="tag b">&#9679; 直连</span></td><td class="dim">—</td><td>默认规则</td><td class="tiny mono">&#8593;95K &#8595;180K</td><td class="tiny mono dim">10:24:28</td></tr>
+        <tr><td><b><span class="app-ic" style="background:#12b7f5"></span>QQ</b></td><td class="mono tiny">4720</td><td>q.qq.com</td><td class="mono tiny">443</td><td><span class="tag b">&#9679; 直连</span></td><td class="dim">—</td><td>国内网站</td><td class="tiny mono">&#8593;52K &#8595;80K</td><td class="tiny mono dim">10:24:25</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="g3 fill">
+    <div class="card center" style="justify-content:space-between">
+      <div class="between" style="width:100%"><div class="card-t">&#128247; 二维码识别</div><span class="more">更多 &gt;</span></div>
+      <div class="center" style="flex:1;gap:6px"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg><div class="sm muted" style="margin-top:8px">支持各种配置二维码</div><div class="tiny dim">一键识别，自动导入</div></div>
+      <button class="btn primary pill" style="width:100%">&#128247; 开始扫描</button>
+    </div>
+    <div class="card">
+      <div class="between" style="margin-bottom:6px"><div class="card-t">&#127760; 网站代理检测</div><span class="more">更多 &gt;</span></div>
+      <div><div class="site-row"><span class="site-ic" style="background:linear-gradient(135deg,#ea4335,#fbbc05)">G</span><span style="flex:1">google.com</span><span class="tag g">代理</span><span class="tiny mono dim" style="width:44px;text-align:right">28 ms</span></div>
+      <div class="site-row"><span class="site-ic" style="background:#ff0033">▶</span><span style="flex:1">youtube.com</span><span class="tag g">代理</span><span class="tiny mono dim" style="width:44px;text-align:right">32 ms</span></div>
+      <div class="site-row"><span class="site-ic" style="background:#2932e1">百</span><span style="flex:1">baidu.com</span><span class="tag b">直连</span><span class="tiny mono dim" style="width:44px;text-align:right">12 ms</span></div>
+      <div class="site-row"><span class="site-ic" style="background:#fb7299">哔</span><span style="flex:1">bilibili.com</span><span class="tag b">直连</span><span class="tiny mono dim" style="width:44px;text-align:right">14 ms</span></div></div>
+      <button class="btn primary pill" style="width:100%;margin-top:12px">&#128269; 开始检测</button>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:6px">&#128203; 代理规则统计</div>
+      <div class="row" style="align-items:center;height:calc(100% - 26px)">
+        <svg viewBox="0 0 120 120" style="width:118px;height:118px;flex:none"><circle cx="60" cy="60" r="45" fill="none" stroke="#1e3a5f" stroke-width="15"/><circle cx="60" cy="60" r="45" fill="none" stroke="#22c55e" stroke-width="15" stroke-dasharray="192 283" stroke-dashoffset="70" transform="rotate(-90 60 60)" stroke-linecap="round"/><circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" stroke-width="15" stroke-dasharray="90 283" stroke-dashoffset="-126" transform="rotate(-90 60 60)" stroke-linecap="round"/><circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="15" stroke-dasharray="3 283" stroke-dashoffset="-220" transform="rotate(-90 60 60)"/><text x="60" y="57" text-anchor="middle" fill="#e2e8f0" font-size="19" font-weight="700">100%</text><text x="60" y="73" text-anchor="middle" fill="#64748b" font-size="10">总计</text></svg>
+        <div class="pie-legend" style="flex:1"><div><i class="legend-dot" style="background:#22c55e"></i>代理 <b style="color:var(--tx)">68%</b></div><div><i class="legend-dot" style="background:#3b82f6"></i>直连 <b style="color:var(--tx)">32%</b></div><div><i class="legend-dot" style="background:#f59e0b"></i>其他 <b style="color:var(--tx)">0%</b></div></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 02 节点管理 / 延迟测速 ============ -->
+<section class="page" data-title="节点管理" data-sub="延迟测速">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="g4" style="height:100px">
+    <div class="card"><div class="stat-l">节点总数</div><div class="stat-v">128</div><div class="stat-sub">来自 3 个订阅</div></div>
+    <div class="card"><div class="stat-l">可用节点</div><div class="stat-v green">96</div><div class="stat-sub">可用率 75.0%</div></div>
+    <div class="card"><div class="stat-l">平均延迟</div><div class="stat-v blue">42 <span style="font-size:13px;font-weight:400">ms</span></div><div class="stat-sub">最近一次测速</div></div>
+    <div class="card"><div class="stat-l">最快节点</div><div class="stat-v purple" style="font-size:19px;margin-top:12px">香港 · 01</div><div class="stat-sub">18 ms / VMess</div></div>
+  </div>
+  <div class="card" style="height:56px;display:flex;align-items:center;gap:10px;padding:10px 14px">
+    <input class="inp" style="width:230px" placeholder="&#128269; 搜索节点名称 / 服务器" value="">
+    <div class="sel" style="width:130px">全部分组</div><div class="sel" style="width:120px">全部协议</div><div class="sel" style="width:120px">延迟排序</div>
+    <button class="btn primary sm">&#9889; 批量测速</button><button class="btn sm">&#43; 添加节点</button><button class="btn sm">&#128229; 导入</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:9px"><span class="tiny dim">测速进度</span><div class="bar" style="width:150px"><i class="g" style="width:72%"></i></div><span class="tiny mono muted">92 / 128</span></div>
+  </div>
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128500; 节点列表 <span class="tag b" style="margin-left:6px">8 / 128</span></div><span class="more">右键可编辑节点</span></div>
+      <table class="tbl">
+        <colgroup><col style="width:23%"><col style="width:11%"><col style="width:21%"><col style="width:11%"><col style="width:12%"><col style="width:11%"><col style="width:11%"></colgroup>
+        <thead><tr><th>节点名称</th><th>协议</th><th>服务器</th><th>延迟</th><th>下载速度</th><th>可用率</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td><b><i class="node-dot" style="background:#22c55e"></i>香港 · 01</b> <span class="tag g tiny">当前</span></td><td><span class="tag gray">VMess</span></td><td class="mono tiny">hk01.example.net</td><td class="green">18 ms</td><td class="mono tiny">18.4 MB/s</td><td class="green">99.8%</td><td class="blue tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#22c55e"></i>香港 · 02</b></td><td><span class="tag gray">VLESS</span></td><td class="mono tiny">hk02.example.net</td><td class="green">24 ms</td><td class="mono tiny">15.2 MB/s</td><td class="green">98.6%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#22c55e"></i>日本 · 东京 01</b></td><td><span class="tag gray">Trojan</span></td><td class="mono tiny">jp01.example.net</td><td class="green">38 ms</td><td class="mono tiny">12.8 MB/s</td><td class="green">97.2%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#22c55e"></i>新加坡 · 01</b></td><td><span class="tag gray">Hysteria2</span></td><td class="mono tiny">sg01.example.net</td><td class="blue">52 ms</td><td class="mono tiny">10.6 MB/s</td><td class="green">96.5%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#22c55e"></i>美国 · 洛杉矶 01</b></td><td><span class="tag gray">Shadowsocks</span></td><td class="mono tiny">us01.example.net</td><td class="blue">138 ms</td><td class="mono tiny">8.1 MB/s</td><td class="orange">88.4%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#f59e0b"></i>美国 · 硅谷 02</b></td><td><span class="tag gray">TUIC</span></td><td class="mono tiny">us02.example.net</td><td class="orange">186 ms</td><td class="mono tiny">5.4 MB/s</td><td class="orange">82.1%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#ef4444"></i>德国 · 法兰克福</b></td><td><span class="tag gray">VMess</span></td><td class="mono tiny">de01.example.net</td><td class="red">超时</td><td class="mono tiny">—</td><td class="red">31.6%</td><td class="dim tiny">选择 · 编辑</td></tr>
+          <tr><td><b><i class="node-dot" style="background:#22c55e"></i>英国 · 伦敦 01</b></td><td><span class="tag gray">VLESS</span></td><td class="mono tiny">uk01.example.net</td><td class="blue">212 ms</td><td class="mono tiny">6.2 MB/s</td><td class="green">93.7%</td><td class="dim tiny">选择 · 编辑</td></tr>
+        </tbody>
+      </table>
+      <div class="between" style="margin-top:auto;padding-top:10px"><span class="tiny dim">显示 1 - 8 条，共 128 条</span><div style="display:flex;gap:5px"><button class="btn sm">&#8249;</button><button class="btn sm primary">1</button><button class="btn sm">2</button><button class="btn sm">3</button><button class="btn sm">&#8250;</button></div></div>
+    </div>
+    <div class="col">
+      <div class="card" style="flex:1">
+        <div class="card-t" style="margin-bottom:12px">&#127760; 当前节点详情</div>
+        <div class="between" style="margin-bottom:12px"><div><div style="font-size:17px;font-weight:700">香港 · 01</div><div class="tiny dim" style="margin-top:4px">VMess / WebSocket / TLS</div></div><span class="tag g">已连接</span></div>
+        <div class="kv"><span>服务器地址</span><span class="mono tiny">hk01.example.net</span></div>
+        <div class="kv"><span>端口</span><span class="mono">443</span></div>
+        <div class="kv"><span>延迟 / 抖动</span><span class="green">18 ms / 2 ms</span></div>
+        <div class="kv"><span>今日流量</span><span>1.86 GB</span></div>
+        <div class="kv"><span>可用率</span><span class="green">99.8%</span></div>
+        <div class="kv"><span>所属订阅</span><span>主力订阅 A</span></div>
+        <div style="margin-top:14px"><div class="tiny dim" style="margin-bottom:6px">负载 32%</div><div class="bar"><i class="g" style="width:32%"></i></div></div>
+        <button class="btn primary" style="width:100%;margin-top:14px">&#9889; 重新测速</button>
+      </div>
+      <div class="card" style="height:222px">
+        <div class="card-t" style="margin-bottom:12px">&#128202; 分组分布</div>
+        <div class="rank-row"><span class="rank-name">香港节点</span><div class="rank-bar bar"><i style="width:86%"></i></div><span class="rank-v">32</span></div>
+        <div class="rank-row"><span class="rank-name">日本节点</span><div class="rank-bar bar"><i class="p" style="width:62%"></i></div><span class="rank-v">23</span></div>
+        <div class="rank-row"><span class="rank-name">新加坡</span><div class="rank-bar bar"><i class="c" style="width:48%"></i></div><span class="rank-v">18</span></div>
+        <div class="rank-row"><span class="rank-name">美国节点</span><div class="rank-bar bar"><i class="o" style="width:72%"></i></div><span class="rank-v">27</span></div>
+        <div class="rank-row"><span class="rank-name">欧洲节点</span><div class="rank-bar bar"><i class="g" style="width:56%"></i></div><span class="rank-v">21</span></div>
+        <div class="rank-row"><span class="rank-name">其他地区</span><div class="rank-bar bar"><i style="width:18%"></i></div><span class="rank-v">7</span></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 03 订阅管理 / 自动更新 ============ -->
+<section class="page" data-title="订阅管理" data-sub="自动更新">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="card" style="height:118px">
+    <div class="card-t" style="margin-bottom:10px">&#10133; 添加订阅</div>
+    <div style="display:flex;gap:10px;align-items:center"><input class="inp" style="flex:1" placeholder="粘贴订阅链接（https://...），支持 Base64 / Clash / Sing-box 格式" value=""><div class="sel" style="width:150px">自动更新：12 小时</div><button class="btn primary">添加订阅</button><button class="btn">&#128247; 扫码导入</button></div>
+    <div class="hint" style="margin-top:10px">订阅地址会加密保存在本地，更新时仅向该地址发起请求。建议开启自动更新以获取最新节点。</div>
+  </div>
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128229; 我的订阅 <span class="tag b" style="margin-left:6px">3 个</span></div><div style="display:flex;gap:8px"><button class="btn sm">&#8635; 全部更新</button><button class="btn sm">批量管理</button></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden">
+        <div style="border:1px solid var(--bd);border-radius:10px;padding:13px;background:rgba(30,58,95,.16)">
+          <div class="between"><div style="display:flex;align-items:center;gap:9px"><b style="font-size:14px">主力订阅 A</b><span class="tag g">正常</span><span class="tag gray">Base64</span></div><div class="sw on"></div></div>
+          <div class="tiny mono dim" style="margin:9px 0 11px">https://sub.example.com/api/v1/nodes?token=****a92f</div>
+          <div class="row" style="gap:0"><div style="flex:1"><div class="tiny dim">节点数</div><div class="md" style="margin-top:4px;color:var(--tx)"><b>64</b> 个</div></div><div style="flex:1"><div class="tiny dim">上次更新</div><div class="md" style="margin-top:4px">11-10 08:32</div></div><div style="flex:1"><div class="tiny dim">下次更新</div><div class="md" style="margin-top:4px">11-10 20:32</div></div><div style="flex:1"><div class="tiny dim">本次流量</div><div class="md" style="margin-top:4px">3.2 GB</div></div></div>
+          <div class="between" style="margin-top:11px"><div style="display:flex;gap:7px"><button class="btn sm primary">&#8635; 立即更新</button><button class="btn sm">编辑</button><button class="btn sm">复制链接</button></div><span class="tiny dim">更新耗时 1.2 s</span></div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:10px;padding:13px;background:rgba(30,58,95,.16)">
+          <div class="between"><div style="display:flex;align-items:center;gap:9px"><b style="font-size:14px">备用订阅 B</b><span class="tag g">正常</span><span class="tag gray">Clash YAML</span></div><div class="sw on"></div></div>
+          <div class="tiny mono dim" style="margin:9px 0 11px">https://cdn.example.org/clash/config.yaml</div>
+          <div class="row" style="gap:0"><div style="flex:1"><div class="tiny dim">节点数</div><div class="md" style="margin-top:4px"><b>48</b> 个</div></div><div style="flex:1"><div class="tiny dim">上次更新</div><div class="md" style="margin-top:4px">11-10 06:15</div></div><div style="flex:1"><div class="tiny dim">下次更新</div><div class="md" style="margin-top:4px">11-10 18:15</div></div><div style="flex:1"><div class="tiny dim">本次流量</div><div class="md" style="margin-top:4px">1.6 GB</div></div></div>
+          <div class="between" style="margin-top:11px"><div style="display:flex;gap:7px"><button class="btn sm">&#8635; 立即更新</button><button class="btn sm">编辑</button><button class="btn sm">复制链接</button></div><span class="tiny dim">更新耗时 0.8 s</span></div>
+        </div>
+        <div style="border:1px solid rgba(239,68,68,.35);border-radius:10px;padding:13px;background:rgba(239,68,68,.05)">
+          <div class="between"><div style="display:flex;align-items:center;gap:9px"><b style="font-size:14px">机场试用 C</b><span class="tag r">已过期</span><span class="tag gray">Sing-box</span></div><div class="sw"></div></div>
+          <div class="tiny mono dim" style="margin:9px 0 11px">https://trial.example.net/singbox.json?token=****7bd1</div>
+          <div class="row" style="gap:0"><div style="flex:1"><div class="tiny dim">节点数</div><div class="md" style="margin-top:4px"><b>16</b> 个</div></div><div style="flex:1"><div class="tiny dim">上次更新</div><div class="md red" style="margin-top:4px">11-02 14:20</div></div><div style="flex:1"><div class="tiny dim">过期时间</div><div class="md red" style="margin-top:4px">11-08 00:00</div></div><div style="flex:1"><div class="tiny dim">剩余流量</div><div class="md" style="margin-top:4px">0 GB</div></div></div>
+          <div class="between" style="margin-top:11px"><div style="display:flex;gap:7px"><button class="btn sm danger">删除订阅</button><button class="btn sm">编辑</button></div><span class="tiny red">拉取失败：HTTP 402</span></div>
+        </div>
+      </div>
+      <div class="between" style="margin-top:auto;padding-top:12px"><span class="tiny dim">共 3 个订阅 · 128 个节点 · 已启用 2 个</span><button class="btn sm">导出全部订阅</button></div>
+    </div>
+    <div class="col">
+      <div class="card" style="height:230px">
+        <div class="card-t" style="margin-bottom:12px">&#9881; 订阅设置</div>
+        <div class="kv"><span>自动更新间隔</span><span>12 小时</span></div>
+        <div class="kv"><span>启动时自动更新</span><span class="sw on"></span></div>
+        <div class="kv"><span>更新后自动测速</span><span class="sw on"></span></div>
+        <div class="kv"><span>过滤无效节点</span><span class="sw on"></span></div>
+        <div class="kv"><span>请求 User-Agent</span><span class="mono tiny">clash-verge/v2</span></div>
+        <div class="kv"><span>请求超时</span><span>15 秒</span></div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="card-t" style="margin-bottom:12px">&#128337; 最近更新记录</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px"><span class="dot g" style="margin-top:5px"></span><div><div class="sm">主力订阅 A 更新成功</div><div class="tiny dim" style="margin-top:4px">获取 64 个节点 · 11-10 08:32:14</div></div></div>
+          <div style="display:flex;gap:10px"><span class="dot g" style="margin-top:5px"></span><div><div class="sm">备用订阅 B 更新成功</div><div class="tiny dim" style="margin-top:4px">获取 48 个节点 · 11-10 06:15:02</div></div></div>
+          <div style="display:flex;gap:10px"><span class="dot" style="background:#f59e0b;margin-top:5px"></span><div><div class="sm">机场试用 C 节点过期</div><div class="tiny dim" style="margin-top:4px">剩余流量不足 · 11-09 21:08:47</div></div></div>
+          <div style="display:flex;gap:10px"><span class="dot" style="background:#ef4444;margin-top:5px"></span><div><div class="sm">机场试用 C 拉取失败</div><div class="tiny dim" style="margin-top:4px">HTTP 402 Payment Required · 11-08 02:15:31</div></div></div>
+          <div style="display:flex;gap:10px"><span class="dot g" style="margin-top:5px"></span><div><div class="sm">主力订阅 A 更新成功</div><div class="tiny dim" style="margin-top:4px">获取 62 个节点 · 11-09 20:32:09</div></div></div>
+        </div>
+      </div>
+      <div class="card" style="height:132px">
+        <div class="card-t" style="margin-bottom:10px">&#128200; 订阅流量汇总</div>
+        <div class="row" style="text-align:center"><div style="flex:1"><div class="big blue">4.8</div><div class="tiny dim" style="margin-top:5px">已用 GB</div></div><div style="width:1px;background:var(--bd)"></div><div style="flex:1"><div class="big green">128</div><div class="tiny dim" style="margin-top:5px">总节点</div></div><div style="width:1px;background:var(--bd)"></div><div style="flex:1"><div class="big purple">99.2%</div><div class="tiny dim" style="margin-top:5px">成功率</div></div></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 04 二维码识别 / 多种格式 ============ -->
+<section class="page" data-title="二维码识别" data-sub="多种格式">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128247; 扫描取景框</div><div class="sel" style="width:190px">摄像头：集成摄像头 (HD)</div></div>
+      <div class="center fill" style="background:radial-gradient(circle at 50% 45%,rgba(37,99,235,.10),transparent 62%);border:1px solid rgba(30,58,95,.6);border-radius:12px">
+        <div class="qr-frame"><div class="qr-grid"></div><div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div><div class="qr-scanline"></div>
+          <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,.35)" stroke-width="1" style="position:absolute;left:112px;top:112px"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h2v2h-2zM18 14h3v2h-3zM14 18h2v3h-2zM18 18h3v3h-3z"/></svg>
+        </div>
+        <div class="sm muted" style="margin-top:22px">将配置二维码放入框内，自动识别并解析</div>
+        <div class="tiny dim" style="margin-top:6px">支持屏幕截图、图片文件、剪贴板与摄像头实时取流</div>
+        <div style="display:flex;gap:9px;margin-top:20px"><button class="btn primary">&#128249; 开启摄像头</button><button class="btn">&#128193; 上传图片</button><button class="btn">&#128203; 剪贴板</button><button class="btn">&#128421; 屏幕截图</button></div>
+        <div class="row" style="gap:0;margin-top:30px;padding:12px 16px;border:1px solid var(--bd);border-radius:9px;background:rgba(30,58,95,.18);width:82%">
+          <div style="flex:1;text-align:center"><div class="tiny dim">预览分辨率</div><div class="sm mono" style="margin-top:5px">1920 × 1080</div></div>
+          <div style="width:1px;background:var(--bd)"></div>
+          <div style="flex:1;text-align:center"><div class="tiny dim">采集帧率</div><div class="sm mono" style="margin-top:5px">30 fps</div></div>
+          <div style="width:1px;background:var(--bd)"></div>
+          <div style="flex:1;text-align:center"><div class="tiny dim">对焦模式</div><div class="sm" style="margin-top:5px">自动对焦</div></div>
+          <div style="width:1px;background:var(--bd)"></div>
+          <div style="flex:1;text-align:center"><div class="tiny dim">图像增强</div><div class="sm green" style="margin-top:5px">已开启</div></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;padding:12px 16px;border:1px solid var(--bd);border-radius:9px;background:rgba(30,58,95,.18);margin-top:14px">
+        <span class="sm" style="font-weight:600;white-space:nowrap">&#9881; 导入选项</span>
+        <div style="display:flex;align-items:center;gap:9px"><span class="tiny dim">跳过重复节点</span><span class="sw on"></span></div>
+        <div style="display:flex;align-items:center;gap:9px"><span class="tiny dim">导入后自动测速</span><span class="sw on"></span></div>
+        <div style="display:flex;align-items:center;gap:9px"><span class="tiny dim">目标分组</span><span class="tag b">默认分组</span></div>
+        <span class="tiny dim" style="margin-left:auto">确认后才写入节点列表</span>
+      </div>
+      <div class="between" style="margin-top:12px"><span class="tiny dim">识别引擎：jsQR · 状态：等待二维码</span><span class="tiny dim">上次识别：11-10 09:42:18</span></div>
+    </div>
+    <div class="col">
+      <div class="card" style="flex:1">
+        <div class="card-h"><div class="card-t">&#9989; 识别结果 <span class="tag g" style="margin-left:6px">4 条</span></div><button class="btn primary sm">全部导入</button></div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="border:1px solid var(--bd);border-radius:9px;padding:11px;background:rgba(30,58,95,.16)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag b">VMess</span><b class="sm">香港 · 二维码 01</b></div><span class="tiny green">解析成功</span></div><div class="tiny mono dim" style="margin-top:8px">hk-qr01.example.net:443 / ws / tls</div><div class="between" style="margin-top:9px"><span class="tiny dim">来源：图片文件 · 09:42:18</span><button class="btn sm primary">导入</button></div></div>
+          <div style="border:1px solid var(--bd);border-radius:9px;padding:11px;background:rgba(30,58,95,.16)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag p">Trojan</span><b class="sm">日本 · 二维码 02</b></div><span class="tiny green">解析成功</span></div><div class="tiny mono dim" style="margin-top:8px">jp-qr02.example.net:443 / sni=jp.example</div><div class="between" style="margin-top:9px"><span class="tiny dim">来源：剪贴板 · 09:41:03</span><button class="btn sm primary">导入</button></div></div>
+          <div style="border:1px solid var(--bd);border-radius:9px;padding:11px;background:rgba(30,58,95,.16)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag o">SS</span><b class="sm">新加坡 · 二维码 03</b></div><span class="tiny green">解析成功</span></div><div class="tiny mono dim" style="margin-top:8px">sg-qr03.example.net:8388 / aes-256-gcm</div><div class="between" style="margin-top:9px"><span class="tiny dim">来源：屏幕截图 · 09:38:51</span><button class="btn sm primary">导入</button></div></div>
+          <div style="border:1px solid var(--bd);border-radius:9px;padding:11px;background:rgba(30,58,95,.16)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag b">Hysteria2</span><b class="sm">香港 · 二维码 04</b></div><span class="tiny green">解析成功</span></div><div class="tiny mono dim" style="margin-top:8px">hk-qr04.example.net:443 / insecure=0</div><div class="between" style="margin-top:9px"><span class="tiny dim">来源：摄像头 · 09:36:12</span><button class="btn sm primary">导入</button></div></div>
+        </div>
+      </div>
+      <div class="card" style="height:214px">
+        <div class="card-t" style="margin-bottom:12px">&#127991; 支持的二维码格式</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><span class="chip"><i></i>VMess</span><span class="chip"><i style="background:#a855f7"></i>VLESS</span><span class="chip"><i style="background:#22c55e"></i>Shadowsocks</span><span class="chip"><i style="background:#f59e0b"></i>Trojan</span><span class="chip"><i style="background:#22d3ee"></i>Hysteria2</span><span class="chip"><i style="background:#ef4444"></i>TUIC</span><span class="chip"><i></i>SOCKS5</span><span class="chip"><i></i>HTTP(S)</span><span class="chip"><i style="background:#22c55e"></i>Clash 订阅</span><span class="chip"><i style="background:#a855f7"></i>Sing-box 订阅</span></div>
+        <div class="hint" style="margin-top:14px">也支持订阅链接二维码与 OTP 认证码。识别后自动去重，重复节点不会再次写入列表。</div>
+      </div>
+      <div class="card" style="height:206px">
+        <div class="card-t" style="margin-bottom:10px">&#128337; 识别历史</div>
+        <div class="kv"><span class="tiny">09:42:18 &nbsp; 图片文件</span><span class="tiny green">成功 · 1 个节点</span></div>
+        <div class="kv"><span class="tiny">09:41:03 &nbsp; 剪贴板</span><span class="tiny green">成功 · 1 个节点</span></div>
+        <div class="kv"><span class="tiny">09:38:51 &nbsp; 屏幕截图</span><span class="tiny green">成功 · 1 个节点</span></div>
+        <div class="kv"><span class="tiny">09:35:22 &nbsp; 摄像头</span><span class="tiny orange">失败 · 图像模糊</span></div>
+        <div class="kv"><span class="tiny">09:31:07 &nbsp; 图片文件</span><span class="tiny red">失败 · 非配置内容</span></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 05 配置导入 / 支持多协议 ============ -->
+<section class="page" data-title="配置导入" data-sub="支持多协议">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="g2 fill">
+    <div class="col">
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <div class="card-h"><div class="card-t">&#128203; 粘贴分享链接 / 配置内容</div><span class="more">支持多行批量</span></div>
+        <div style="flex:1;background:#080f1d;border:1px solid var(--bd);border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:2.5;color:#94a3b8;overflow:hidden;display:flex;flex-direction:column">
+          <div><span style="color:#475569">1</span>&nbsp; vmess://eyJ2IjoiMiIsInBzIjoi6aaZ5rivLTAxIiwiYWRkIjoiaGs…</div>
+          <div><span style="color:#475569">2</span>&nbsp; vless://b8f3c1d0-…@jp01.example.net:443?type=ws&amp;security=tls#日本-东京</div>
+          <div><span style="color:#475569">3</span>&nbsp; trojan://pAss9x@sg01.example.net:443?sni=sg.example#新加坡-01</div>
+          <div><span style="color:#475569">4</span>&nbsp; ss://YWVzLTI1Ni1nY206cGFzcw==@us01.example.net:8388#美国-洛杉矶</div>
+          <div><span style="color:#475569">5</span>&nbsp; hysteria2://auth@hk02.example.net:443/?sni=hk.example#香港-02</div>
+          <div><span style="color:#475569">6</span>&nbsp; tuic://c7e1…-…@us02.example.net:443?congestion_control=bbr#美国-硅谷</div>
+          <div><span style="color:#475569">7</span>&nbsp; socks5://user:pass@192.168.1.10:1080#本地-SOCKS</div>
+          <div><span style="color:#475569">8</span>&nbsp; http://user:pass@proxy.local:8080#内网-HTTP</div>
+          <div style="color:#f87171"><span style="color:#475569">9</span>&nbsp; vmess://%%%bad-base64-content%%%</div>
+          <div style="color:#64748b"><span style="color:#475569">10</span>&nbsp; // ── 订阅链接与配置片段 ──</div>
+          <div><span style="color:#475569">11</span>&nbsp; https://sub.example.com/api/v1/nodes?token=****a92f</div>
+          <div><span style="color:#475569">12</span>&nbsp; proxies:</div>
+          <div><span style="color:#475569">13</span>&nbsp; &nbsp; - {name: 香港-03, type: vmess, server: hk03.example.net, port: 443}</div>
+          <div><span style="color:#475569">14</span>&nbsp; &nbsp; - {name: 日本-02, type: vless, server: jp02.example.net, port: 443}</div>
+          <div><span style="color:#475569">15</span>&nbsp; &nbsp; - {name: 新加坡-02, type: trojan, server: sg02.example.net, port: 443}</div>
+          <div style="color:#64748b"><span style="color:#475569">16</span>&nbsp; // 共 15 行 · # 号后为节点备注名 · 解析在本地完成</div>
+          <div style="margin-top:auto;border:1px dashed var(--bd);border-radius:8px;padding:10px;text-align:center;color:#64748b;font-size:11px;line-height:1.5">也可将 .txt / .yaml / .json 配置文件拖拽到此处，或点击上方「从文件导入」</div>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:12px"><button class="btn primary">&#9889; 解析并导入</button><button class="btn">&#128193; 从文件导入</button><button class="btn">&#128203; 从剪贴板</button><button class="btn">清空</button></div>
+      </div>
+      <div class="card" style="height:216px">
+        <div class="card-t" style="margin-bottom:12px">&#128268; 协议支持矩阵</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">
+          <div class="chip" style="justify-content:center;padding:9px"><i></i>VMess</div><div class="chip" style="justify-content:center;padding:9px"><i style="background:#a855f7"></i>VLESS</div><div class="chip" style="justify-content:center;padding:9px"><i style="background:#22c55e"></i>Shadowsocks</div><div class="chip" style="justify-content:center;padding:9px"><i style="background:#f59e0b"></i>Trojan</div>
+          <div class="chip" style="justify-content:center;padding:9px"><i style="background:#22d3ee"></i>Hysteria2</div><div class="chip" style="justify-content:center;padding:9px"><i style="background:#ef4444"></i>TUIC</div><div class="chip" style="justify-content:center;padding:9px"><i></i>SOCKS5</div><div class="chip" style="justify-content:center;padding:9px"><i></i>HTTP(S)</div>
+        </div>
+        <div class="hint" style="margin-top:14px">同时兼容 Clash YAML、Sing-box JSON、v2rayN 批量订阅文本。解析在本地完成，配置不会上传。</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="g3" style="height:100px">
+        <div class="card"><div class="stat-l">解析成功</div><div class="stat-v green">7</div></div>
+        <div class="card"><div class="stat-l">解析失败</div><div class="stat-v red">1</div></div>
+        <div class="card"><div class="stat-l">自动去重</div><div class="stat-v blue">2</div></div>
+      </div>
+      <div class="card fill" style="display:flex;flex-direction:column">
+        <div class="card-h"><div class="card-t">&#128269; 解析结果预览</div><div class="tag g">已就绪 · 5 条可导入</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;overflow:hidden">
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag b">VMess</span><b class="sm">香港 · 01</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">hk01.example.net:443 · ws · tls · sni=hk.example</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag p">VLESS</span><b class="sm">日本 · 东京</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">jp01.example.net:443 · ws · tls · flow=xtls-rprx-vision</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag o">Trojan</span><b class="sm">新加坡 · 01</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">sg01.example.net:443 · sni=sg.example</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag g">SS</span><b class="sm">美国 · 洛杉矶</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">us01.example.net:8388 · aes-256-gcm</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag gray">Hysteria2</span><b class="sm">香港 · 02</b></div><span class="tiny orange">&#8635; 重复，已跳过</span></div><div class="tiny mono dim" style="margin-top:7px">hk02.example.net:443 · 与「主力订阅 A」中节点相同</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag r">TUIC</span><b class="sm">美国 · 硅谷</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">us02.example.net:443 · bbr · alpn=h3</div></div>
+          <div style="border:1px solid var(--bd);border-radius:8px;padding:10px"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag gray">SOCKS5</span><b class="sm">本地 · SOCKS</b></div><span class="tiny green">&#10003; 有效</span></div><div class="tiny mono dim" style="margin-top:7px">192.168.1.10:1080 · 用户名/密码认证</div></div>
+          <div style="border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px;background:rgba(245,158,11,.05)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag o">HTTP</span><b class="sm">内网 · HTTP</b></div><span class="tiny orange">&#9888; 格式警告</span></div><div class="tiny orange" style="margin-top:7px">proxy.local:8080 · 明文传输，建议改用 HTTPS 代理</div></div>
+          <div style="border:1px solid rgba(239,68,68,.35);border-radius:8px;padding:10px;background:rgba(239,68,68,.05)"><div class="between"><div style="display:flex;align-items:center;gap:8px"><span class="tag r">VMess</span><b class="sm">未命名节点</b></div><span class="tiny red">&#10007; 解析失败</span></div><div class="tiny red" style="margin-top:7px">Base64 解码失败：非法字符 %%%，请检查链接完整性</div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="between" style="margin-bottom:9px"><span class="sm" style="color:var(--tx2);font-weight:600">字段映射说明</span><span class="tiny dim">解析后写入节点库的标准字段</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><span class="chip"><i></i>ps → 节点名称</span><span class="chip"><i style="background:#22c55e"></i>add/port → 服务器</span><span class="chip"><i style="background:#a855f7"></i>id → UUID / 密码</span><span class="chip"><i style="background:#f59e0b"></i>net/type → 传输层</span><span class="chip"><i style="background:#22d3ee"></i>sni/host → TLS 参数</span><span class="chip"><i style="background:#ef4444"></i>security → 加密方式</span></div>
+        <div class="between" style="margin-top:auto;padding-top:12px"><span class="tiny dim">导入目标分组：<b style="color:var(--tx2)">默认分组</b></span><div style="display:flex;gap:8px"><button class="btn sm">重新解析</button><button class="btn primary sm">确认导入 5 条</button></div></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 06 规则管理 / 智能分流 ============ -->
+<section class="page" data-title="规则管理" data-sub="智能分流">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="card" style="height:88px;display:flex;align-items:center;justify-content:space-between;padding:14px 18px">
+    <div><div class="card-t" style="margin-bottom:8px">&#9881; 分流模式</div><div class="hint">规则模式按下方规则表逐条匹配，匹配不到时走默认策略</div></div>
+    <div class="seg"><button>全局代理</button><button class="on">规则模式</button><button>直连模式</button></div>
+    <div style="display:flex;gap:9px"><button class="btn">&#128229; 导入规则集</button><button class="btn primary">&#10133; 新建规则</button></div>
+  </div>
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128208; 分流规则表 <span class="tag b" style="margin-left:6px">9 条</span></div><div style="display:flex;gap:8px"><input class="inp" style="width:180px" placeholder="搜索规则"><button class="btn sm">&#8645; 排序</button></div></div>
+      <table class="tbl">
+        <colgroup><col style="width:8%"><col style="width:20%"><col style="width:12%"><col style="width:25%"><col style="width:12%"><col style="width:10%"><col style="width:13%"></colgroup>
+        <thead><tr><th>优先级</th><th>规则名称</th><th>匹配类型</th><th>匹配内容</th><th>动作</th><th>命中次数</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td class="mono tiny dim">01</td><td><b>广告拦截</b></td><td><span class="tag gray">DOMAIN-SUFFIX</span></td><td class="mono tiny">adservice, doubleclick, ads</td><td><span class="tag r">REJECT</span></td><td class="mono tiny">2,184</td><td><span class="sw on"></span></td></tr>
+          <tr><td class="mono tiny dim">02</td><td><b>国内直连</b></td><td><span class="tag gray">GEOIP</span></td><td class="mono tiny">CN</td><td><span class="tag b">DIRECT</span></td><td class="mono tiny">8,642</td><td><span class="sw on"></span></td></tr>
+          <tr class="hi"><td class="mono tiny dim">03</td><td><b>国外网站代理</b></td><td><span class="tag gray">DOMAIN-KEYWORD</span></td><td class="mono tiny">google, youtube, github</td><td><span class="tag g">PROXY</span></td><td class="mono tiny">4,317</td><td><span class="sw on"></span></td></tr>
+          <tr><td class="mono tiny dim">04</td><td><b>Telegram 应用</b></td><td><span class="tag gray">PROCESS-NAME</span></td><td class="mono tiny">Telegram.exe</td><td><span class="tag g">PROXY</span></td><td class="mono tiny">1,056</td><td><span class="sw on"></span></td></tr>
+          <tr><td class="mono tiny dim">05</td><td><b>流媒体解锁</b></td><td><span class="tag gray">DOMAIN-SUFFIX</span></td><td class="mono tiny">netflix.com, hbomax.com</td><td><span class="tag g">PROXY</span></td><td class="mono tiny">328</td><td><span class="sw on"></span></td></tr>
+          <tr><td class="mono tiny dim">06</td><td><b>局域网直连</b></td><td><span class="tag gray">IP-CIDR</span></td><td class="mono tiny">192.168.0.0/16, 10.0.0.0/8</td><td><span class="tag b">DIRECT</span></td><td class="mono tiny">3,920</td><td><span class="sw on"></span></td></tr>
+          <tr><td class="mono tiny dim">07</td><td><b>微软更新直连</b></td><td><span class="tag gray">DOMAIN-SUFFIX</span></td><td class="mono tiny">windowsupdate.com</td><td><span class="tag b">DIRECT</span></td><td class="mono tiny">142</td><td><span class="sw"></span></td></tr>
+          <tr><td class="mono tiny dim">08</td><td><b>下载工具直连</b></td><td><span class="tag gray">PROCESS-NAME</span></td><td class="mono tiny">qBittorrent.exe</td><td><span class="tag b">DIRECT</span></td><td class="mono tiny">0</td><td><span class="sw"></span></td></tr>
+          <tr><td class="mono tiny dim">09</td><td><b>兜底规则 MATCH</b></td><td><span class="tag gray">MATCH</span></td><td class="mono tiny">*</td><td><span class="tag g">PROXY</span></td><td class="mono tiny">1,284</td><td><span class="sw on"></span></td></tr>
+        </tbody>
+      </table>
+      <div class="between" style="margin-top:auto;padding-top:10px"><span class="tiny dim">规则自上而下匹配，命中即停止 · 共启用 7 条</span><div style="display:flex;gap:8px"><button class="btn sm">测试规则</button><button class="btn sm">导出规则</button></div></div>
+    </div>
+    <div class="col">
+      <div class="card" style="height:266px">
+        <div class="card-t" style="margin-bottom:12px">&#128230; 规则集</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div><div class="between sm"><span><b>Proxy 代理规则集</b></span><span class="green">4,317 次</span></div><div class="bar" style="margin-top:7px"><i class="g" style="width:68%"></i></div><div class="tiny dim" style="margin-top:5px">1,204 条域名 / 12 个 IP 段</div></div>
+          <div><div class="between sm"><span><b>Direct 直连规则集</b></span><span class="blue">8,642 次</span></div><div class="bar" style="margin-top:7px"><i style="width:88%"></i></div><div class="tiny dim" style="margin-top:5px">8,916 条域名 / GEOIP-CN</div></div>
+          <div><div class="between sm"><span><b>Reject 拦截规则集</b></span><span class="orange">2,184 次</span></div><div class="bar" style="margin-top:7px"><i class="o" style="width:32%"></i></div><div class="tiny dim" style="margin-top:5px">562 条广告域名</div></div>
+        </div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="card-t" style="margin-bottom:12px">&#127942; 规则命中 TOP 5</div>
+        <div class="rank-row"><span class="rank-n">1</span><span class="rank-name">国内直连</span><div class="rank-bar bar"><i style="width:100%"></i></div><span class="rank-v">8,642</span></div>
+        <div class="rank-row"><span class="rank-n">2</span><span class="rank-name">国外网站代理</span><div class="rank-bar bar"><i class="g" style="width:50%"></i></div><span class="rank-v">4,317</span></div>
+        <div class="rank-row"><span class="rank-n">3</span><span class="rank-name">局域网直连</span><div class="rank-bar bar"><i style="width:45%"></i></div><span class="rank-v">3,920</span></div>
+        <div class="rank-row"><span class="rank-n">4</span><span class="rank-name">广告拦截</span><div class="rank-bar bar"><i class="o" style="width:25%"></i></div><span class="rank-v">2,184</span></div>
+        <div class="rank-row"><span class="rank-n">5</span><span class="rank-name">兜底 MATCH</span><div class="rank-bar bar"><i class="g" style="width:15%"></i></div><span class="rank-v">1,284</span></div>
+        <div class="hr"></div>
+        <div class="card-t" style="margin-bottom:10px">&#128295; 新建规则</div>
+        <div style="display:flex;gap:7px"><div class="sel" style="flex:1">DOMAIN-SUFFIX</div><div class="sel" style="width:80px">PROXY</div></div>
+        <input class="inp" style="width:100%;margin-top:8px" placeholder="输入域名，多个用逗号分隔" value="">
+        <button class="btn primary" style="width:100%;margin-top:9px">添加规则</button>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 07 网络连接监控 / 代理状态识别 ============ -->
+<section class="page" data-title="网络连接监控" data-sub="代理状态识别">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="g4" style="height:100px">
+    <div class="card"><div class="metric"><div class="metric-ic" style="background:rgba(59,130,246,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div><div><div class="stat-l">活跃连接</div><div class="stat-v" style="margin-top:4px">1,284</div></div></div></div>
+    <div class="card"><div class="metric"><div class="metric-ic" style="background:rgba(34,197,94,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div><div><div class="stat-l">代理连接</div><div class="stat-v green" style="margin-top:4px">872</div></div></div></div>
+    <div class="card"><div class="metric"><div class="metric-ic" style="background:rgba(148,163,184,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8"><path d="M5 12h14M5 12l4-4M5 12l4 4M19 12l-4-4M19 12l-4 4"/></svg></div><div><div class="stat-l">直连连接</div><div class="stat-v" style="margin-top:4px">412</div></div></div></div>
+    <div class="card"><div class="metric"><div class="metric-ic" style="background:rgba(168,85,247,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.8"><path d="M2 12h3l2-6 3 12 2.5-9 2 5h2l1.5-2H22"/></svg></div><div><div class="stat-l">实时吞吐</div><div class="stat-v purple" style="margin-top:4px">20.9 <span style="font-size:12px;font-weight:400">MB/s</span></div></div></div></div>
+  </div>
+  <div class="card" style="height:54px;display:flex;align-items:center;gap:9px;padding:9px 14px">
+    <span class="tag g"><i class="dot g"></i>实时采集中</span>
+    <input class="inp" style="width:200px" placeholder="搜索进程 / 目标地址">
+    <div class="sel" style="width:120px">全部应用</div><div class="sel" style="width:120px">全部状态</div><div class="sel" style="width:120px">TCP / UDP</div>
+    <button class="btn sm">&#9208; 暂停</button><button class="btn sm">&#128465; 清空</button><button class="btn sm">&#128229; 导出</button>
+    <div style="margin-left:auto" class="tiny dim">刷新频率 1 s · 保留最近 2 小时</div>
+  </div>
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128225; 实时连接列表</div><span class="more">点击行查看连接详情</span></div>
+      <table class="tbl">
+        <colgroup><col style="width:13%"><col style="width:7%"><col style="width:21%"><col style="width:6%"><col style="width:7%"><col style="width:9%"><col style="width:11%"><col style="width:12%"><col style="width:7%"><col style="width:7%"></colgroup>
+        <thead><tr><th>进程名称</th><th>PID</th><th>目标地址</th><th>端口</th><th>协议</th><th>代理状态</th><th>使用节点</th><th>上传 / 下载</th><th>连接时长</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td><b>Chrome</b></td><td class="mono tiny">8424</td><td class="mono tiny">www.google.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag g">代理</span></td><td>香港 · 01</td><td class="tiny mono">128K / 256K</td><td class="tiny mono">00:42:18</td><td class="blue tiny">详情</td></tr>
+          <tr><td><b>Edge</b></td><td class="mono tiny">7568</td><td class="mono tiny">www.youtube.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag g">代理</span></td><td>香港 · 01</td><td class="tiny mono">210K / 420K</td><td class="tiny mono">00:38:02</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>Telegram</b></td><td class="mono tiny">6212</td><td class="mono tiny">149.154.167.51</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag g">代理</span></td><td>香港 · 01</td><td class="tiny mono">85K / 120K</td><td class="tiny mono">02:14:36</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>GitHub Desktop</b></td><td class="mono tiny">9340</td><td class="mono tiny">github.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag g">代理</span></td><td>日本 · 01</td><td class="tiny mono">64K / 318K</td><td class="tiny mono">00:12:44</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>Discord</b></td><td class="mono tiny">3184</td><td class="mono tiny">discord.com</td><td class="mono tiny">443</td><td class="tiny">UDP</td><td><span class="tag g">代理</span></td><td>香港 · 01</td><td class="tiny mono">42K / 96K</td><td class="tiny mono">01:08:21</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>微信</b></td><td class="mono tiny">5120</td><td class="mono tiny">wx.qq.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag b">直连</span></td><td class="dim">—</td><td class="tiny mono">72K / 96K</td><td class="tiny mono">03:26:10</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>Steam</b></td><td class="mono tiny">4876</td><td class="mono tiny">store.steampowered.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag b">直连</span></td><td class="dim">—</td><td class="tiny mono">95K / 180K</td><td class="tiny mono">00:54:33</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>QQ</b></td><td class="mono tiny">4720</td><td class="mono tiny">q.qq.com</td><td class="mono tiny">443</td><td class="tiny">UDP</td><td><span class="tag b">直连</span></td><td class="dim">—</td><td class="tiny mono">52K / 80K</td><td class="tiny mono">03:18:07</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>OneDrive</b></td><td class="mono tiny">6628</td><td class="mono tiny">onedrive.live.com</td><td class="mono tiny">443</td><td class="tiny">TCP</td><td><span class="tag g">代理</span></td><td>新加坡 · 01</td><td class="tiny mono">1.2M / 86K</td><td class="tiny mono">00:21:45</td><td class="dim tiny">详情</td></tr>
+          <tr><td><b>系统更新</b></td><td class="mono tiny">1024</td><td class="mono tiny">windowsupdate.com</td><td class="mono tiny">80</td><td class="tiny">TCP</td><td><span class="tag b">直连</span></td><td class="dim">—</td><td class="tiny mono">12K / 240K</td><td class="tiny mono">00:06:12</td><td class="dim tiny">详情</td></tr>
+        </tbody>
+      </table>
+      <div class="between" style="margin-top:auto;padding-top:10px"><span class="tiny dim">显示 1 - 10 条，共 1,284 条连接</span><span class="tiny dim">总上行 3.6 MB/s · 总下行 17.3 MB/s</span></div>
+    </div>
+    <div class="col">
+      <div class="card" style="flex:1">
+        <div class="card-t" style="margin-bottom:12px">&#128269; 连接详情 <span class="tag b" style="margin-left:6px">Chrome</span></div>
+        <div class="kv"><span>本地地址</span><span class="mono tiny">127.0.0.1:52118</span></div>
+        <div class="kv"><span>远程地址</span><span class="mono tiny">142.250.196.4:443</span></div>
+        <div class="kv"><span>目标域名</span><span class="mono tiny">www.google.com</span></div>
+        <div class="kv"><span>传输协议</span><span>TCP / TLS 1.3</span></div>
+        <div class="kv"><span>代理状态</span><span class="green">已代理</span></div>
+        <div class="kv"><span>使用节点</span><span>香港 · 01</span></div>
+        <div class="kv"><span>命中规则</span><span>国外网站代理 #03</span></div>
+        <div class="kv"><span>上传 / 下载</span><span class="mono tiny">128 KB / 256 KB</span></div>
+        <div class="kv"><span>连接时长</span><span>00:42:18</span></div>
+        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn sm danger" style="flex:1">断开连接</button><button class="btn sm" style="flex:1">添加到规则</button></div>
+      </div>
+      <div class="card" style="height:230px">
+        <div class="card-t" style="margin-bottom:12px">&#128200; 进程流量排行</div>
+        <div class="rank-row"><span class="rank-name">Chrome</span><div class="rank-bar bar"><i style="width:92%"></i></div><span class="rank-v">1.82 GB</span></div>
+        <div class="rank-row"><span class="rank-name">OneDrive</span><div class="rank-bar bar"><i class="p" style="width:64%"></i></div><span class="rank-v">1.26 GB</span></div>
+        <div class="rank-row"><span class="rank-name">Edge</span><div class="rank-bar bar"><i class="g" style="width:48%"></i></div><span class="rank-v">0.94 GB</span></div>
+        <div class="rank-row"><span class="rank-name">Telegram</span><div class="rank-bar bar"><i class="o" style="width:30%"></i></div><span class="rank-v">0.58 GB</span></div>
+        <div class="rank-row"><span class="rank-name">Steam</span><div class="rank-bar bar"><i class="c" style="width:20%"></i></div><span class="rank-v">0.40 GB</span></div>
+        <div class="tiny dim" style="margin-top:14px">统计范围：今日 00:00 起 · 共 5.0 GB</div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 08 流量统计 / 详细报表 ============ -->
+<section class="page" data-title="流量统计" data-sub="详细报表">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="card" style="height:100px;display:flex;align-items:center;gap:26px;padding:14px 18px">
+    <div style="min-width:220px"><div class="card-t" style="margin-bottom:8px">&#128200; 流量概览</div><div class="seg"><button class="on">今日</button><button>近 7 天</button><button>近 30 天</button><button>自定义</button></div></div>
+    <div style="width:1px;height:60px;background:var(--bd)"></div>
+    <div style="flex:1"><div class="stat-l">总流量</div><div class="stat-v">5.0 <span style="font-size:13px;font-weight:400">GB</span></div><div class="stat-sub green">&#8593; 12.4% 较昨日</div></div>
+    <div style="flex:1"><div class="stat-l">上传</div><div class="stat-v purple" style="font-size:22px">1.2 GB</div><div class="stat-sub">占比 24.0%</div></div>
+    <div style="flex:1"><div class="stat-l">下载</div><div class="stat-v blue" style="font-size:22px">3.8 GB</div><div class="stat-sub">占比 76.0%</div></div>
+    <div style="flex:1"><div class="stat-l">峰值速率</div><div class="stat-v green" style="font-size:22px">18.4 MB/s</div><div class="stat-sub">14:00 - 15:00</div></div>
+    <button class="btn sm">&#128229; 导出报表</button>
+  </div>
+  <div class="card" style="height:400px;display:flex;flex-direction:column">
+    <div class="card-h" style="margin-bottom:4px"><div class="card-t">&#128202; 24 小时流量趋势</div><div style="display:flex;gap:16px;align-items:center"><span class="sm muted"><i class="legend-dot" style="background:#3b82f6"></i>下载速度</span><span class="sm muted"><i class="legend-dot" style="background:#a855f7"></i>上传速度</span><span class="tiny dim">单位：MB/s</span></div></div>
+    <svg viewBox="0 0 900 300" style="width:100%;height:100%" preserveAspectRatio="none">
+      <defs><linearGradient id="gradD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6" stop-opacity=".32"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></linearGradient><linearGradient id="gradU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a855f7" stop-opacity=".22"/><stop offset="1" stop-color="#a855f7" stop-opacity="0"/></linearGradient></defs>
+      <line class="grid-line" x1="40" y1="20" x2="890" y2="20"/><line class="grid-line" x1="40" y1="80" x2="890" y2="80"/><line class="grid-line" x1="40" y1="140" x2="890" y2="140"/><line class="grid-line" x1="40" y1="200" x2="890" y2="200"/><line class="grid-line" x1="40" y1="260" x2="890" y2="260"/>
+      <text class="axis-t" x="8" y="24">20</text><text class="axis-t" x="8" y="84">15</text><text class="axis-t" x="8" y="144">10</text><text class="axis-t" x="8" y="204">5</text><text class="axis-t" x="14" y="264">0</text>
+      <text class="axis-t" x="40" y="282">00:00</text><text class="axis-t" x="182" y="282">04:00</text><text class="axis-t" x="324" y="282">08:00</text><text class="axis-t" x="466" y="282">12:00</text><text class="axis-t" x="608" y="282">16:00</text><text class="axis-t" x="750" y="282">20:00</text><text class="axis-t" x="860" y="282">24:00</text>
+      <path d="M40 240 L110 228 L180 236 L250 196 L320 208 L390 158 L460 172 L530 118 L600 134 L670 86 L740 104 L810 62 L880 82 L880 260 L40 260Z" fill="url(#gradD)"/>
+      <path d="M40 240 L110 228 L180 236 L250 196 L320 208 L390 158 L460 172 L530 118 L600 134 L670 86 L740 104 L810 62 L880 82" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M40 254 L110 250 L180 252 L250 238 L320 242 L390 224 L460 230 L530 210 L600 216 L670 196 L740 204 L810 182 L880 194 L880 260 L40 260Z" fill="url(#gradU)"/>
+      <path d="M40 254 L110 250 L180 252 L250 238 L320 242 L390 224 L460 230 L530 210 L600 216 L670 196 L740 204 L810 182 L880 194" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linejoin="round"/>
+      <line x1="670" y1="20" x2="670" y2="260" stroke="#60a5fa" stroke-width="1" stroke-dasharray="4 4" opacity=".7"/>
+      <circle cx="670" cy="86" r="5" fill="#3b82f6" stroke="#0d1a2d" stroke-width="2"/><circle cx="670" cy="196" r="4" fill="#a855f7" stroke="#0d1a2d" stroke-width="2"/>
+      <rect x="686" y="38" width="132" height="62" rx="8" fill="#111d32" stroke="#2d4a6f"/>
+      <text x="698" y="58" fill="#94a3b8" font-size="11" font-family="Microsoft YaHei">16:00 - 17:00</text>
+      <text x="698" y="76" fill="#60a5fa" font-size="11" font-family="Microsoft YaHei">下载 14.6 MB/s</text>
+      <text x="698" y="92" fill="#c084fc" font-size="11" font-family="Microsoft YaHei">上传 5.3 MB/s</text>
+    </svg>
+  </div>
+  <div class="g3 fill">
+    <div class="card">
+      <div class="card-t" style="margin-bottom:12px">&#128187; 应用流量排行</div>
+      <div class="rank-row"><span class="rank-n">1</span><span class="rank-name">Chrome</span><div class="rank-bar bar"><i style="width:100%"></i></div><span class="rank-v">1.82 GB</span></div>
+      <div class="rank-row"><span class="rank-n">2</span><span class="rank-name">OneDrive</span><div class="rank-bar bar"><i class="p" style="width:69%"></i></div><span class="rank-v">1.26 GB</span></div>
+      <div class="rank-row"><span class="rank-n">3</span><span class="rank-name">Edge</span><div class="rank-bar bar"><i class="g" style="width:52%"></i></div><span class="rank-v">0.94 GB</span></div>
+      <div class="rank-row"><span class="rank-n">4</span><span class="rank-name">Telegram</span><div class="rank-bar bar"><i class="o" style="width:32%"></i></div><span class="rank-v">0.58 GB</span></div>
+      <div class="rank-row"><span class="rank-n">5</span><span class="rank-name">Steam</span><div class="rank-bar bar"><i class="c" style="width:22%"></i></div><span class="rank-v">0.40 GB</span></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:12px">&#127760; 节点流量占比</div>
+      <div class="row" style="align-items:center;height:calc(100% - 26px)">
+        <svg viewBox="0 0 120 120" style="width:112px;height:112px;flex:none"><circle cx="60" cy="60" r="44" fill="none" stroke="#1e3a5f" stroke-width="16"/><circle cx="60" cy="60" r="44" fill="none" stroke="#3b82f6" stroke-width="16" stroke-dasharray="152 276" stroke-dashoffset="69" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="44" fill="none" stroke="#22c55e" stroke-width="16" stroke-dasharray="83 276" stroke-dashoffset="-87" transform="rotate(-90 60 60)"/><circle cx="60" cy="60" r="44" fill="none" stroke="#a855f7" stroke-width="16" stroke-dasharray="41 276" stroke-dashoffset="-174" transform="rotate(-90 60 60)"/><text x="60" y="57" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="700">5.0</text><text x="60" y="73" text-anchor="middle" fill="#64748b" font-size="10">GB 总计</text></svg>
+        <div class="pie-legend" style="flex:1"><div><i class="legend-dot" style="background:#3b82f6"></i>香港 · 01 <b style="color:var(--tx)">55%</b></div><div><i class="legend-dot" style="background:#22c55e"></i>日本 · 01 <b style="color:var(--tx)">30%</b></div><div><i class="legend-dot" style="background:#a855f7"></i>新加坡 · 01 <b style="color:var(--tx)">15%</b></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:12px">&#128268; 协议与连接分布</div>
+      <div class="kv"><span>TCP 连接</span><span>1,042 <span class="tiny dim">(81.2%)</span></span></div>
+      <div class="kv"><span>UDP 连接</span><span>242 <span class="tiny dim">(18.8%)</span></span></div>
+      <div class="kv"><span>HTTPS / TLS 1.3</span><span>1,128</span></div>
+      <div class="kv"><span>代理 / 直连请求</span><span class="green">872 / 412</span></div>
+      <div class="kv"><span>拦截请求</span><span class="orange">2,184</span></div>
+      <div class="kv"><span>平均连接时长</span><span>00:18:42</span></div>
+      <div class="hint" style="margin-top:12px">数据每 60 秒聚合一次，本地保存 30 天，可导出 CSV 明细。</div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 09 日志查看 / 运行日志 ============ -->
+<section class="page" data-title="日志查看" data-sub="运行日志">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="card" style="height:54px;display:flex;align-items:center;gap:9px;padding:9px 14px">
+    <div class="seg"><button class="on">全部</button><button>信息</button><button>警告</button><button>错误</button></div>
+    <input class="inp" style="width:230px" placeholder="&#128269; 搜索日志内容 / 模块" value="">
+    <div class="sel" style="width:140px">全部模块</div>
+    <button class="btn sm">&#128229; 导出日志</button><button class="btn sm">&#128465; 清空</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:9px"><span class="tiny dim">实时滚动</span><span class="sw on"></span></div>
+  </div>
+  <div class="g23 fill">
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#128220; 运行日志 <span class="tag b" style="margin-left:6px">app-2026-11-10.log</span></div><span class="more">自动滚动至最新</span></div>
+      <div class="log-wrap fill">
+        <div class="log-line"><span class="log-ts">10:18:42.316</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">TCP 连接建立 127.0.0.1:52118 -&gt; hk01.example.net:443 经由 香港 · 01</span></div>
+        <div class="log-line"><span class="log-ts">10:18:42.108</span><span class="lv info">INFO</span><span class="log-mod">[core/rules]</span><span class="log-msg">规则命中 #03 国外网站代理 DOMAIN-KEYWORD=google 动作 PROXY</span></div>
+        <div class="log-line"><span class="log-ts">10:18:41.884</span><span class="lv ok">OK</span><span class="log-mod">[core/dns]</span><span class="log-msg">www.google.com 解析完成 -&gt; 142.250.196.4 (DoH 耗时 12 ms)</span></div>
+        <div class="log-line"><span class="log-ts">10:18:40.552</span><span class="lv info">INFO</span><span class="log-mod">[core/tun]</span><span class="log-msg">TUN 虚拟网卡 tun0 状态正常，MTU 1500，路由表已同步</span></div>
+        <div class="log-line"><span class="log-ts">10:18:38.019</span><span class="lv warn">WARN</span><span class="log-mod">[core/node]</span><span class="log-msg">节点 德国 · 法兰克福 连续 3 次测速超时，已临时移出可用列表</span></div>
+        <div class="log-line"><span class="log-ts">10:18:36.774</span><span class="lv info">INFO</span><span class="log-mod">[core/sub]</span><span class="log-msg">订阅 主力订阅 A 检查更新完成，节点数未变化 (64)</span></div>
+        <div class="log-line"><span class="log-ts">10:18:32.140</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">系统代理已设置 127.0.0.1:7890 / socks5 127.0.0.1:7891</span></div>
+        <div class="log-line"><span class="log-ts">10:18:30.902</span><span class="lv err">ERROR</span><span class="log-mod">[core/kernel]</span><span class="log-msg">内核 sing-box 启动失败：端口 7891 被占用 (PID 4876)，已回退至 Mihomo</span></div>
+        <div class="log-line"><span class="log-ts">10:18:30.615</span><span class="lv warn">WARN</span><span class="log-mod">[core/kernel]</span><span class="log-msg">检测到多个内核实例，建议关闭冲突进程后重试</span></div>
+        <div class="log-line"><span class="log-ts">10:18:28.331</span><span class="lv ok">OK</span><span class="log-mod">[core/kernel]</span><span class="log-msg">Mihomo v1.19.4 内核已启动，配置文件校验通过</span></div>
+        <div class="log-line"><span class="log-ts">10:18:27.044</span><span class="lv info">INFO</span><span class="log-mod">[app/config]</span><span class="log-msg">加载配置 config.yaml，共 128 个节点 / 9 条分流规则</span></div>
+        <div class="log-line"><span class="log-ts">10:18:26.712</span><span class="lv info">INFO</span><span class="log-mod">[app/main]</span><span class="log-msg">全能代理助手 v1.0.0 启动，平台 win32 x64，Node v24.14.0</span></div>
+        <div class="log-line"><span class="log-ts">10:17:58.203</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">用户手动断开连接，已恢复系统代理设置</span></div>
+        <div class="log-line"><span class="log-ts">10:17:56.881</span><span class="lv info">INFO</span><span class="log-mod">[core/rules]</span><span class="log-msg">规则集 hot-reload 完成，新增 12 条域名规则</span></div>
+        <div class="log-line"><span class="log-ts">10:17:52.447</span><span class="lv err">ERROR</span><span class="log-mod">[core/sub]</span><span class="log-msg">订阅 机场试用 C 拉取失败：HTTP 402 Payment Required (重试 1/3)</span></div>
+        <div class="log-line"><span class="log-ts">10:17:50.129</span><span class="lv info">INFO</span><span class="log-mod">[ui/renderer]</span><span class="log-msg">窗口状态变更：最小化至系统托盘</span></div>
+        <div class="log-line"><span class="log-ts">10:17:48.006</span><span class="lv info">INFO</span><span class="log-mod">[core/node]</span><span class="log-msg">批量测速完成 128 个节点，成功 96，平均延迟 42 ms</span></div>
+        <div class="log-line"><span class="log-ts">10:17:40.552</span><span class="lv info">INFO</span><span class="log-mod">[app/main]</span><span class="log-msg">开机自启检查完成，计划任务状态正常</span></div>
+        <div class="log-line"><span class="log-ts">10:17:38.210</span><span class="lv info">INFO</span><span class="log-mod">[core/node]</span><span class="log-msg">节点 香港 · 01 测速完成，延迟 18 ms，抖动 2 ms</span></div>
+        <div class="log-line"><span class="log-ts">10:17:36.884</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">Chrome 新建连接 -&gt; www.youtube.com 命中规则 #03</span></div>
+        <div class="log-line"><span class="log-ts">10:17:35.442</span><span class="lv ok">OK</span><span class="log-mod">[core/dns]</span><span class="log-msg">DoH 查询 github.com 返回 140.82.112.4 (14 ms)</span></div>
+        <div class="log-line"><span class="log-ts">10:17:33.118</span><span class="lv warn">WARN</span><span class="log-mod">[core/tun]</span><span class="log-msg">tun0 检测到 MTU 不匹配，已自动调整为 1400</span></div>
+        <div class="log-line"><span class="log-ts">10:17:31.906</span><span class="lv info">INFO</span><span class="log-mod">[core/rules]</span><span class="log-msg">规则集 Anti-Ad 加载完成，共 562 条广告域名</span></div>
+        <div class="log-line"><span class="log-ts">10:17:29.774</span><span class="lv info">INFO</span><span class="log-mod">[core/sub]</span><span class="log-msg">备用订阅 B 发起条件请求，服务端返回 304 Not Modified</span></div>
+        <div class="log-line"><span class="log-ts">10:17:27.330</span><span class="lv info">INFO</span><span class="log-mod">[ui/renderer]</span><span class="log-msg">切换到「节点管理」页面，渲染 128 条节点记录</span></div>
+        <div class="log-line"><span class="log-ts">10:17:25.081</span><span class="lv ok">OK</span><span class="log-mod">[core/kernel]</span><span class="log-msg">内核配置文件语法校验通过，热重载耗时 86 ms</span></div>
+        <div class="log-line"><span class="log-ts">10:17:22.645</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">UDP 会话建立 127.0.0.1:53412 -&gt; 149.154.167.51:443</span></div>
+        <div class="log-line"><span class="log-ts">10:17:20.118</span><span class="lv warn">WARN</span><span class="log-mod">[core/sub]</span><span class="log-msg">订阅 机场试用 C 剩余流量低于 1 GB，请及时续费</span></div>
+        <div class="log-line"><span class="log-ts">10:17:18.502</span><span class="lv info">INFO</span><span class="log-mod">[app/config]</span><span class="log-msg">自动保存当前配置到 config.yaml，大小 84 KB</span></div>
+        <div class="log-line"><span class="log-ts">10:17:16.033</span><span class="lv info">INFO</span><span class="log-mod">[core/node]</span><span class="log-msg">批量测速任务开始，队列长度 128，并发数 8</span></div>
+        <div class="log-line"><span class="log-ts">10:17:13.774</span><span class="lv ok">OK</span><span class="log-mod">[core/dns]</span><span class="log-msg">本地 DNS 缓存命中 baidu.com (0 ms)</span></div>
+        <div class="log-line"><span class="log-ts">10:17:11.229</span><span class="lv info">INFO</span><span class="log-mod">[core/proxy]</span><span class="log-msg">系统代理还原完成，已写回原有 PAC 配置</span></div>
+        <div class="log-line"><span class="log-ts">10:17:08.641</span><span class="lv info">INFO</span><span class="log-mod">[app/main]</span><span class="log-msg">用户会话恢复，加载上次选中的节点 香港 · 01</span></div>
+        <div class="log-line"><span class="log-ts">10:17:05.004</span><span class="lv info">INFO</span><span class="log-mod">[app/main]</span><span class="log-msg">全能代理助手 v1.0.0 初始化完成，耗时 1.42 s</span></div>
+      </div>
+      <div class="between" style="padding-top:10px"><span class="tiny dim">共 1,309 条日志 · 当前显示最新 34 条</span><span class="tiny dim">日志文件大小 2.4 MB · 保留最近 7 天</span></div>
+    </div>
+    <div class="col">
+      <div class="card" style="height:220px">
+        <div class="card-t" style="margin-bottom:12px">&#128202; 日志统计</div>
+        <div class="row" style="text-align:center"><div style="flex:1"><div class="big blue">1,284</div><div class="tiny dim" style="margin-top:5px">信息</div></div><div style="width:1px;background:var(--bd)"></div><div style="flex:1"><div class="big orange">23</div><div class="tiny dim" style="margin-top:5px">警告</div></div><div style="width:1px;background:var(--bd)"></div><div style="flex:1"><div class="big red">2</div><div class="tiny dim" style="margin-top:5px">错误</div></div></div>
+        <div class="hr"></div>
+        <div class="kv"><span>日志级别</span><span>DEBUG</span></div>
+        <div class="kv"><span>今日新增</span><span>1,309 条</span></div>
+        <div class="kv"><span>最早记录</span><span>00:02:14</span></div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="card-t" style="margin-bottom:12px">&#128269; 模块过滤</div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div class="between sm"><span>&#9745; core/proxy <span class="tiny dim">代理转发</span></span><span class="tiny mono dim">486</span></div>
+          <div class="between sm"><span>&#9745; core/rules <span class="tiny dim">规则匹配</span></span><span class="tiny mono dim">312</span></div>
+          <div class="between sm"><span>&#9745; core/dns <span class="tiny dim">域名解析</span></span><span class="tiny mono dim">204</span></div>
+          <div class="between sm"><span>&#9745; core/kernel <span class="tiny dim">内核管理</span></span><span class="tiny mono dim">118</span></div>
+          <div class="between sm"><span>&#9745; core/node <span class="tiny dim">节点测速</span></span><span class="tiny mono dim">96</span></div>
+          <div class="between sm"><span>&#9745; core/sub <span class="tiny dim">订阅更新</span></span><span class="tiny mono dim">48</span></div>
+          <div class="between sm"><span>&#9744; ui/renderer <span class="tiny dim">界面事件</span></span><span class="tiny mono dim">32</span></div>
+          <div class="between sm"><span>&#9744; app/config <span class="tiny dim">配置读写</span></span><span class="tiny mono dim">13</span></div>
+        </div>
+        <div class="hr"></div>
+        <div class="hint">勾选需要显示的模块，过滤结果实时生效。错误日志始终显示，不受过滤影响。</div>
+        <div class="hr"></div>
+        <div class="card-t" style="margin-bottom:9px">&#128451; 日志保留策略</div>
+        <div class="kv"><span>单文件大小上限</span><span>10 MB</span></div>
+        <div class="kv"><span>保留天数</span><span>7 天</span></div>
+        <div class="kv"><span>自动压缩归档</span><span class="sw on"></span></div>
+        <div class="kv"><span>错误日志单独留存</span><span class="sw on"></span></div>
+        <div class="hr"></div>
+        <div class="card-t" style="margin-bottom:9px">&#128293; 高亮关键词</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px"><span class="chip"><i style="background:#ef4444"></i>ERROR</span><span class="chip"><i style="background:#f59e0b"></i>timeout</span><span class="chip"><i style="background:#a855f7"></i>kernel</span><span class="chip"><i style="background:#22c55e"></i>connected</span></div>
+      </div>
+      <div class="card" style="height:140px">
+        <div class="card-t" style="margin-bottom:10px">&#128295; 快捷操作</div>
+        <div style="display:flex;flex-direction:column;gap:8px"><button class="btn sm">复制选中日志</button><button class="btn sm">打开日志目录</button><button class="btn sm">上报诊断信息</button></div>
+      </div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+
+<!-- ============ 10 设置中心 / 高级设置 ============ -->
+<section class="page" data-title="设置中心" data-sub="高级设置">
+<div class="upper"><div class="sidebar side-slot"></div><div class="main"><div class="topbar top-slot"></div>
+<div class="view">
+  <div class="g32 fill">
+    <div class="card">
+      <div class="card-t" style="margin-bottom:14px">&#9881; 设置分类</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div class="set-cat on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>常规设置</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>代理端口</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg>内核管理</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 2.8c-.7.3-1 1-1 1.7M12 17h.01"/></svg>DNS 设置</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="17" cy="16" r="3"/></svg>TUN 模式</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a9 9 0 1 0 0 18V3z"/><circle cx="12" cy="12" r="9"/></svg>界面外观</div>
+        <div class="set-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>高级选项</div>
+      </div>
+      <div class="hr"></div>
+      <div class="hint">全能代理助手 v1.0.0<br>配置目录：%APPDATA%\\universal-proxy-client<br>当前内核：Mihomo v1.19.4</div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px"><button class="btn sm">&#128193; 打开配置目录</button><button class="btn sm">&#8635; 检查更新</button></div>
+      <div class="hr" style="margin-top:22px"></div>
+      <div class="card-t" style="margin-bottom:9px">&#128268; 运行状态速览</div>
+      <div class="kv"><span>内核进程</span><span class="green">运行中</span></div>
+      <div class="kv"><span>系统代理</span><span class="green">已开启</span></div>
+      <div class="kv"><span>TUN 虚拟网卡</span><span class="green">已开启</span></div>
+      <div class="kv"><span>配置版本</span><span class="mono tiny">v1.0.0 + 24</span></div>
+      <div class="kv"><span>内存占用</span><span>186 MB</span></div>
+      <div class="kv"><span>磁盘占用</span><span>42.6 MB</span></div>
+      <div class="hr" style="margin-top:22px"></div>
+      <div class="card-t" style="margin-bottom:9px">&#9000; 常用快捷键</div>
+      <div class="kv"><span>快速连接 / 断开</span><span class="mono tiny">Ctrl + P</span></div>
+      <div class="kv"><span>隐藏到托盘</span><span class="mono tiny">Ctrl + H</span></div>
+      <div class="kv"><span>打开设置中心</span><span class="mono tiny">Ctrl + ,</span></div>
+      <div class="kv"><span>重新加载配置</span><span class="mono tiny">Ctrl + R</span></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-h"><div class="card-t">&#9881; 常规设置</div><span class="tag g">所有更改已保存</span></div>
+      <div style="overflow:hidden">
+        <div class="set-grp">&#128268; 启动与运行</div>
+        <div class="set-row"><div><div class="set-t">开机自动启动</div><div class="set-d">登录 Windows 后自动运行并连接上次节点</div></div><span class="sw on"></span></div>
+        <div class="set-row"><div><div class="set-t">启动时自动连接</div><div class="set-d">应用启动后立即启用系统代理，无需手动点击</div></div><span class="sw on"></span></div>
+        <div class="set-row"><div><div class="set-t">关闭时最小化到托盘</div><div class="set-d">点击窗口关闭按钮时隐藏到系统托盘而非退出</div></div><span class="sw on"></span></div>
+        <div class="set-row"><div><div class="set-t">自动检查更新</div><div class="set-d">每周检查一次新版本，仅提示不自动安装</div></div><span class="sw"></span></div>
+        <div class="set-grp">&#127760; 代理与端口</div>
+        <div class="set-row"><div><div class="set-t">HTTP 混合代理端口</div><div class="set-d">本地 HTTP / SOCKS5 混合入站监听端口</div></div><div class="inp mono" style="width:110px;text-align:center">7890</div></div>
+        <div class="set-row"><div><div class="set-t">SOCKS5 独立端口</div><div class="set-d">供其他应用单独接入的 SOCKS5 端口</div></div><div class="inp mono" style="width:110px;text-align:center">7891</div></div>
+        <div class="set-row"><div><div class="set-t">允许局域网连接</div><div class="set-d">允许同一局域网内的其他设备使用本机代理</div></div><span class="sw"></span></div>
+        <div class="set-row"><div><div class="set-t">自动设置系统代理</div><div class="set-d">连接时写入系统代理，断开时自动还原</div></div><span class="sw on"></span></div>
+        <div class="set-grp">&#128295; 内核与界面</div>
+        <div class="set-row"><div><div class="set-t">当前代理内核</div><div class="set-d">支持 Mihomo / Xray / sing-box 热切换</div></div><div class="sel" style="width:150px">Mihomo v1.19.4</div></div>
+        <div class="set-row"><div><div class="set-t">界面主题</div><div class="set-d">深色模式为默认主题，浅色模式开发中</div></div><div class="sel" style="width:150px">深色模式</div></div>
+        <div class="set-row"><div><div class="set-t">界面语言</div><div class="set-d">应用界面显示语言</div></div><div class="sel" style="width:150px">简体中文</div></div>
+        <div class="set-row"><div><div class="set-t">日志级别</div><div class="set-d">DEBUG 会记录全部连接明细，占用更多磁盘</div></div><div class="sel" style="width:150px">DEBUG</div></div>
+      </div>
+      <div class="between" style="margin-top:auto;padding-top:14px;border-top:1px solid var(--bd)"><span class="tiny dim">修改端口或内核后需重新连接才能生效</span><div style="display:flex;gap:9px"><button class="btn">恢复默认</button><button class="btn primary">保存设置</button></div></div>
+    </div>
+  </div>
+</div></div></div><div class="footer foot-slot"></div></section>
+<script>
+(function(){
+var MENU=[
+ ['首页','实时状态','home'],['节点管理','延迟测速','nodes'],['订阅管理','自动更新','subscribe'],
+ ['二维码识别','多种格式','qr'],['配置导入','支持多协议','import'],['规则管理','智能分流','rules'],
+ ['网络连接监控','代理状态识别','monitor'],['流量统计','详细报表','stats'],['日志查看','运行日志','logs'],
+ ['设置中心','高级设置','settings']
+];
+var I={
+ home:'<path d="M3 10.6 12 3l9 7.6V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+ nodes:'<circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v4M12 11H5.5v5M12 11h6.5v5"/>',
+ subscribe:'<path d="M20 11a8 8 0 0 0-14.5-4.5M4 13a8 8 0 0 0 14.5 4.5"/><path d="M4 4v3.5h3.5M20 20v-3.5h-3.5"/>',
+ qr:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/>',
+ import:'<path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+ rules:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+ monitor:'<path d="M2 12h3l2-6 3 12 2.5-9 2 5h2l1.5-2H22"/>',
+ stats:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+ logs:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2.5 2.5-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-3.5v-.5a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1-2.5-2.5.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3v-3.5h.5a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8L4.6 7.5 7 5l.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3h3.5v.5a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2.5 2.5-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1H21v3.5h-.5a1.6 1.6 0 0 0-1.1 1z"/>'
+};
+function svg(k,cls){return '<svg class="'+cls+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(I[k]||'')+'</svg>';}
+var LOGO='<svg class="logo-mark" viewBox="0 0 40 40"><path d="M4 17 36 4 25 36 19 24 4 17Z" fill="#3b82f6"/><path d="M4 17 36 4 19 24Z" fill="#60a5fa"/><path d="M19 24 25 36 36 4Z" fill="#1d4ed8" opacity=".6"/></svg>';
+function sidebar(active){
+ var nav=MENU.map(function(m,i){
+  return '<div class="nav-item'+(i===active?' active':'')+'">'+svg(m[2],'nav-ico')+'<div class="nav-txt"><span class="nav-t">'+m[0]+'</span><span class="nav-s">'+m[1]+'</span></div></div>';
+ }).join('');
+ return '<div class="logo-area">'+LOGO+'<div><div class="logo-t">全能代理助手</div><div class="logo-v">v1.0.0</div></div></div><nav class="nav-list">'+nav+'</nav><div class="side-foot"><div class="theme-btn"><span class="theme-sun"></span><span>深色模式</span><span class="chev">&gt;</span></div></div>';
+}
+function topbar(title,sub){
+ var t='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16 16l5 5"/></svg>';
+ var bell='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
+ var w=function(p){return '<div class="wbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">'+p+'</svg></div>';};
+ return '<div class="crumb"><b>'+title+'</b><span>'+sub+'</span></div><div class="top-actions"><div class="tbtn">'+t+'检测助手</div><div class="tbtn">'+bell+'消息</div><div class="wbtns">'+w('<path d="M4 12h16"/>')+w('<rect x="4" y="4" width="16" height="16" rx="1"/>')+w('<path d="M5 5l14 14M19 5L5 19"/>')+'</div></div>';
+}
+function footer(){
+ var bars='<span class="sig"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:13px"></i></span>';
+ return '<div class="f-l"><span class="dot g"></span><span>系统代理：已开启</span><span class="dim">|</span><span>TUN模式：已开启</span></div><div class="f-c">运行时长：<strong>2小时36分钟</strong></div><div class="f-r">'+bars+'<span>网络状态：<strong style="color:var(--green)">优秀</strong></span></div>';
+}
+var pages=document.querySelectorAll('.page');
+pages.forEach(function(p,i){
+ p.querySelector('.side-slot').innerHTML=sidebar(i);
+ p.querySelector('.top-slot').innerHTML=topbar(p.dataset.title,p.dataset.sub);
+ p.querySelector('.foot-slot').innerHTML=footer();
+});
+var q=new URLSearchParams(location.search).get('p') || (location.hash ? location.hash.slice(1) : null);
+if(q==='all'){
+ document.body.style.height='auto';document.body.style.overflow='auto';
+ pages.forEach(function(p){p.style.marginBottom='18px'});
+}else{
+ var n=(q===null?1:parseInt(q,10))-1;
+ if(isNaN(n)||n<0||n>=pages.length)n=0;
+ pages.forEach(function(p,i){p.style.display=(i===n)?'flex':'none'});
+ document.title='全能代理助手 · '+(MENU[n][0]);
+}
+})();
+</script>
+</body>
+</html>

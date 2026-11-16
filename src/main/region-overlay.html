@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>框选二维码区域</title>
+<style>
+  /*
+   * 全屏透明框选层：窗口本身 transparent，页面底色全透明。
+   * 不拖拽时只铺一层淡遮罩，提示「可以框了」；一旦开始拖，遮罩撤掉，
+   * 由选框的 9999px 阴影去压暗四周 —— 框内像素完全不被覆盖，
+   * 所以背后的真实二维码原样可见，扫起来不会因为盖了一层膜而识别失败。
+   */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: transparent; overflow: hidden;
+    cursor: crosshair; user-select: none;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  }
+  #veil { position: fixed; inset: 0; background: rgba(4, 8, 16, .32); }
+  #box {
+    position: fixed; display: none; left: 0; top: 0; width: 0; height: 0;
+    border: 1px solid #4aa8ff; background: transparent;
+    box-shadow: 0 0 0 9999px rgba(4, 8, 16, .55), inset 0 0 0 1px rgba(255, 255, 255, .22);
+  }
+  #size {
+    position: fixed; display: none; padding: 2px 7px; border-radius: 5px;
+    background: rgba(10, 14, 24, .88); color: #dce8ff;
+    font-size: 11.5px; line-height: 1.6; white-space: nowrap; pointer-events: none;
+  }
+  #hint {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    padding: 7px 15px; border-radius: 999px;
+    background: rgba(10, 14, 24, .84); color: #e8eefc;
+    font-size: 12.5px; letter-spacing: .2px; white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .32);
+  }
+  #hint b { color: #67b6ff; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div id="veil"></div>
+  <div id="box"></div>
+  <div id="size"></div>
+  <div id="hint">拖拽框住屏幕上的二维码 · 松开即识别 · <b>Esc 取消</b></div>
+<script>
+  (function () {
+    var veil = document.getElementById('veil');
+    var boxEl = document.getElementById('box');
+    var sizeEl = document.getElementById('size');
+    var hintEl = document.getElementById('hint');
+    var start = null, active = false, done = false;
+
+    function finish(payload) {
+      if (done) return;
+      done = true;
+      if (typeof window.__qrRegionResolve === 'function') window.__qrRegionResolve(payload);
+    }
+
+    function place(x, y, w, h) {
+      boxEl.style.display = 'block';
+      boxEl.style.left = x + 'px';
+      boxEl.style.top = y + 'px';
+      boxEl.style.width = w + 'px';
+      boxEl.style.height = h + 'px';
+      sizeEl.style.display = 'block';
+      sizeEl.textContent = Math.round(w) + ' × ' + Math.round(h);
+      // 尺寸标签默认贴在选框右下角，贴边时自动翻到左侧 / 上方，避免被屏幕边缘裁掉
+      var lx = x + w + 8, ly = y + h + 8;
+      if (lx + sizeEl.offsetWidth > window.innerWidth - 4) lx = Math.max(4, x - sizeEl.offsetWidth - 8);
+      if (ly + sizeEl.offsetHeight > window.innerHeight - 4) ly = Math.max(4, y - sizeEl.offsetHeight - 8);
+      sizeEl.style.left = lx + 'px';
+      sizeEl.style.top = ly + 'px';
+    }
+
+    function reset() {
+      active = false;
+      start = null;
+      boxEl.style.display = 'none';
+      sizeEl.style.display = 'none';
+      veil.style.display = 'block';
+    }
+
+    window.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      active = true;
+      start = { x: e.clientX, y: e.clientY };
+      veil.style.display = 'none';
+      hintEl.style.display = 'none';
+      place(start.x, start.y, 0, 0);
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (!active || !start) return;
+      var x = Math.min(start.x, e.clientX), y = Math.min(start.y, e.clientY);
+      place(x, y, Math.abs(e.clientX - start.x), Math.abs(e.clientY - start.y));
+    });
+
+    window.addEventListener('mouseup', function (e) {
+      if (!active || !start) return;
+      var x = Math.min(start.x, e.clientX), y = Math.min(start.y, e.clientY);
+      var w = Math.abs(e.clientX - start.x), h = Math.abs(e.clientY - start.y);
+      if (w < 6 || h < 6) { reset(); hintEl.style.display = 'block'; return; }  // 手抖点了一下，不算框选
+      finish({ canceled: false, x: x, y: y, w: w, h: h });
+    });
+
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') finish({ canceled: true });
+    });
+
+    window.addEventListener('contextmenu', function (e) { e.preventDefault(); finish({ canceled: true }); });
+    window.addEventListener('blur', function () { /* 不自动取消：用户可能切到别的窗口再回来 */ });
+  })();
+</script>
+</body>
+</html>

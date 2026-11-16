@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-theme-mode="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>万能代理客户端</title>
+  <!-- 首屏防闪烁：Vue 挂载前先按用户选择定好主题，内容与 src/renderer/theme.ts 的 THEME_BOOTSTRAP_SCRIPT 一致 -->
+  <script>(function(){try{var m=localStorage.getItem('upc.theme.v1');if(m!=='light'&&m!=='dark'&&m!=='system')m='dark';var d=m==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.dataset.theme=d;document.documentElement.dataset.themeMode=m;document.documentElement.style.colorScheme=d;}catch(e){}})();</script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/renderer/main.ts"></script>
+</body>
+</html>
