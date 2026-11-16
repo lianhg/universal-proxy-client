@@ -358,12 +358,13 @@ function onPointerUp() {
 .panel--edit, .panel.has-custom { position:relative; }
 .panel--edit .ml-mod, .panel.has-custom .ml-mod { position:absolute; }
 .panel--edit .split, .panel.has-custom .split { display:contents; }
-.panel--edit .ml-mod { outline:1px dashed var(--border-strong); outline-offset:2px; border-radius:var(--radius-md); }
+.panel--edit .ml-mod { outline:1px dashed var(--border-strong); outline-offset:0; border-radius:var(--radius-md); }
 .panel--edit .ml-mod.editing { background:var(--bg-inset); }
 .panel--edit .table-wrap, .panel.has-custom .table-wrap { max-height:none; flex:none; min-width:0; }
 
-/* 拖动手柄（左上）与缩放手柄（右下） */
-.mod-grip { position:absolute; top:0; left:0; display:flex; align-items:center; gap:4px; padding:2px 8px; font-size:11px; color:#fff; background:var(--accent); border-radius:0 var(--radius-md) 0 var(--radius-md); cursor:move; user-select:none; z-index:6; opacity:0; pointer-events:none; transition:opacity .12s; }
+/* 拖动手柄（左上）与缩放手柄（右下）：与首页同一套视觉——
+   手柄贴在模块上边线外侧，不遮模块内容，也不影响模块尺寸 */
+.mod-grip { position:absolute; top:0; left:0; transform:translateY(-100%); display:flex; align-items:center; gap:4px; height:16px; padding:0 7px; font-size:10px; line-height:1; white-space:nowrap; color:#fff; background:var(--accent); border-radius:6px 6px 0 0; cursor:move; user-select:none; z-index:6; opacity:0; pointer-events:none; transition:opacity .12s; }
 .mod-grip span { pointer-events:none; }
 .mod-resize { position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; z-index:6; background:linear-gradient(135deg, transparent 50%, var(--border-strong) 50%); border-bottom-right-radius:var(--radius-md); opacity:0; transition:opacity .12s; }
 /* 只有点「编辑布局」进入编辑态才显示手柄；平时完全隐藏且不接收点击，模块为固定展示态 */
