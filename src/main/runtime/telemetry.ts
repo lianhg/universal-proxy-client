@@ -448,7 +448,9 @@ export function queryXrayStats(host: string, port: number, timeoutMs = REQUEST_T
         }
         try {
           const buf = Buffer.concat(chunks);
-          resolve(parseQueryStats(stripGrpcPrefix(buf)));
+          // 必须走 finish() 而不是直接 resolve：否则 settled 不置位、超时定时器不撤销、
+          // HTTP/2 会话不关闭。每秒采样一次会累积大量会话和定时器，最终拖垮进程。
+          finish(true, parseQueryStats(stripGrpcPrefix(buf)));
         } catch (e) {
           finish(false, undefined, e instanceof Error ? e.message : String(e));
         }

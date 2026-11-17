@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* 仓库卫生守卫：确保入库文件里不再出现真实节点信息（IP / 订阅节点名 / 密码样式）。
-   背景：v1.1.2 之前，tests 的测试数据里残留过真实订阅节点 203.0.113.10（含节点名与疑似密码），
-   已随历史重写清除。本测试钉死工作区入库文件，防止再犯。 */
+   背景：v1.1.2 之前，tests 的测试数据里残留过真实订阅节点信息（含节点名与疑似密码），
+   已随历史重写清除。本测试钉死工作区入库文件，防止再犯。
+   注意：敏感串在本文件中用片段拼接构造，避免字面量出现在仓库里被自己扫到。 */
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
@@ -34,8 +35,10 @@ const tracked = execSync('git ls-files', { encoding: 'utf8' }).split('\n').filte
   .filter(f => !f.startsWith('design/png/') && !f.startsWith('src/renderer/flags/svg/'))
   .filter(f => /\.(ts|vue|mjs|js|json|md|html|css|yml|yaml|py|ps1|bat|txt)$/.test(f))
 
-t('任何入库文件都不再出现真实节点 IP 203.0.113.10', () => {
-  for (const f of tracked) assert.ok(!readFileSync(f, 'utf8').includes('203.0.113.10'), `${f} 含真实节点 IP`)
+// 用片段拼出当年的真实节点 IP，避免完整字面量入库
+const LEAKED_IP = ['13', '55', '34', '55'].join('.')
+t('任何入库文件都不再出现已知的真实节点 IP', () => {
+  for (const f of tracked) assert.ok(!readFileSync(f, 'utf8').includes(LEAKED_IP), `${f} 含真实节点 IP`)
 })
 
 t('测试与源码里的 IP 只允许文档保留 / 私网 / 白名单公共服务', () => {
@@ -47,9 +50,12 @@ t('测试与源码里的 IP 只允许文档保留 / 私网 / 白名单公共服�
   }
 })
 
-t('测试数据不再含订阅来源样式节点名（如 free-nodes / wo SS-N）', () => {
-  for (const f of tracked.filter(f => f.startsWith('tests/'))) {
-    assert.ok(!/free-nodes|wo SS-\d/.test(readFileSync(f, 'utf8')), `${f} 疑似残留订阅节点名`)
+const LEAKED_NAME = ['free', 'nodes'].join('-')
+const LEAKED_PREFIX = ['wo', 'SS'].join(' ')
+t('测试数据不再含订阅来源样式节点名', () => {
+  const rx = new RegExp(LEAKED_NAME + '|' + LEAKED_PREFIX + '-\\d')
+  for (const f of tracked.filter(f => f.startsWith('tests/') && !f.endsWith('repo-hygiene.test.mjs'))) {
+    assert.ok(!rx.test(readFileSync(f, 'utf8')), `${f} 疑似残留订阅节点名`)
   }
 })
 

@@ -193,6 +193,25 @@ function removeSelected() {
   selected.value = []
 }
 
+/** 清空全部节点：不可撤销（会写进本地持久化），必须二次确认。
+ *  用「再点一次」代替系统 confirm：样式统一，也不会被浏览器/Electron 的原生弹窗打断。 */
+const clearArmed = ref(false)
+let clearArmTimer: ReturnType<typeof setTimeout> | null = null
+function clearAllNodes() {
+  if (!store.nodes.length) return
+  if (!clearArmed.value) {
+    clearArmed.value = true
+    if (clearArmTimer) clearTimeout(clearArmTimer)
+    clearArmTimer = setTimeout(() => { clearArmed.value = false; clearArmTimer = null }, 3000)
+    return
+  }
+  if (clearArmTimer) { clearTimeout(clearArmTimer); clearArmTimer = null }
+  clearArmed.value = false
+  store.clearAll()
+  selected.value = []
+  expanded.value = null
+}
+
 /** 连接 / 热切换：未连接 → 直接启动；运行中 → 杀旧拉新，失败自动回退 */
 async function connectNode(n: UnifiedNode) { await store.activateNode(n) }
 const isCurrent = (n: UnifiedNode) => store.runtime.state === 'running' && store.runtime.node?.id === n.id
@@ -227,7 +246,7 @@ const isCurrent = (n: UnifiedNode) => store.runtime.state === 'running' && store
         {{ store.geoBusy ? '归属地查询中…' : '查询IP归属地' }}
       </button>
       <button class="btn danger" :disabled="!selected.length" @click="removeSelected">删除选中</button>
-      <button class="btn danger" :disabled="!store.nodes.length" @click="store.clearAll()">清空</button>
+      <button class="btn danger" :class="{ armed: clearArmed }" :disabled="!store.nodes.length" :title="clearArmed ? '3 秒内再点一次确认清空全部节点' : '清空全部节点（不可撤销，需再点一次确认）'" @click="clearAllNodes">{{ clearArmed ? `再点一次确认（${store.nodes.length} 个）` : '清空' }}</button>
     </div>
 
     <!-- 第二排：测速（两档 + 一键全检） -->
@@ -404,4 +423,5 @@ details summary { cursor: pointer; color: var(--accent); margin-top: 6px; }
 .g-unknown { color: var(--text-muted); }
 .detail-note { margin-top: 6px; }
 .chip { display: inline-block; margin: 0 6px 4px 0; padding: 0 6px; border: 1px solid var(--divider); border-radius: var(--radius-full); font-size: 10px; }
+.btn.danger.armed { background: var(--danger); color: #fff; border-color: var(--danger); font-weight: 600; }
 </style>

@@ -97,7 +97,14 @@ export class RuntimeManager {
   private proc: ChildProcess | null = null;
   private logs: RuntimeLog[] = [];
   private snapshot: SystemProxySnapshot | null = null;
+  /** 系统代理写入是否「可能已改到一半」。读快照成功就置位，恢复成功才清除。
+   *  不能用 status.systemProxy.applied 代替：applied 只在 apply 脚本成功后才置 true，
+   *  若 apply 写到一半失败，applied 仍是 false，恢复会被跳过，注册表留下死端口代理导致断网。 */
+  private proxyDirty = false;
   private stopping = false;
+  /** 正在进行的 stop 任务。dispose 若撞上 stop，必须等它跑完再让进程退出，
+   *  否则恢复系统代理的 PowerShell 会被中途终止，代理留在被改状态。 */
+  private stopInFlight: Promise<void> | null = null;
   private disposed = false;
   /** 热切换期间为 true：此时进程退出不算「意外」，不触发自动重启 */
   private switching = false;
@@ -377,6 +384,9 @@ export class RuntimeManager {
         if (!read) throw new Error('当前平台不支持自动读取系统代理快照');
         const raw = await this.runPS(read.script, 'read');
         this.snapshot = parseWindowsSnapshot(raw, process.platform);
+        // 读快照成功就标记「可能需要恢复」：apply 脚本是多步写注册表，任何一步失败都会抛错，
+        // 但前面已写的项不会自动回滚。只有置位 proxyDirty，catch→stopInternal 才会真正恢复。
+        this.proxyDirty = true;
         this.emitLog('info', 'system', `已保存原始系统代理快照：ProxyEnable=${this.snapshot.proxyEnable ?? '未设置'} / ${this.snapshot.proxyServer ?? '未设置'}`);
         const apply = applySystemProxyScript(process.platform, server);
         if (!apply) throw new Error('当前平台不支持自动写入系统代理');
@@ -947,7 +957,9 @@ export class RuntimeManager {
   }
 
   private async restoreProxy(): Promise<void> {
-    if (!this.status.systemProxy.applied || !this.snapshot) {
+    // 以 proxyDirty 为准而非 applied：apply 写到一半失败时 applied=false，但注册表可能已被改动。
+    // 只要读快照成功过（proxyDirty=true），就必须尝试恢复，绝不能跳过。
+    if (!this.proxyDirty || !this.snapshot) {
       this.status.systemProxy = { applied: false, server: '', snapshot: null, restored: false, message: '系统代理未被修改，无需恢复' };
       return;
     }
@@ -955,6 +967,7 @@ export class RuntimeManager {
     if (!script) {
       this.status.systemProxy.message = '⚠ 当前平台无法自动恢复系统代理，请按快照手动还原';
       this.emitLog('error', 'system', `${this.status.systemProxy.message}：${JSON.stringify(this.snapshot)}`);
+      // 保留 proxyDirty + snapshot，供下次断开 / 退出重试，也方便用户按日志手动还原
       return;
     }
     try {
@@ -964,12 +977,15 @@ export class RuntimeManager {
         message: '系统代理已按启动前的快照恢复',
       };
       this.emitLog('info', 'system', this.status.systemProxy.message);
+      // 只有真正恢复成功才清除脏标记和快照
+      this.proxyDirty = false;
+      this.snapshot = null;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      this.status.systemProxy.message = `⚠ 系统代理恢复失败：${msg}`;
+      this.status.systemProxy.message = `⚠ 系统代理恢复失败：${msg}（原始快照已保留，下次断开会重试；也可按日志手动还原）`;
       this.emitLog('error', 'system', `${this.status.systemProxy.message}；原始快照：${JSON.stringify(this.snapshot)}`);
+      // 恢复失败：snapshot 与 proxyDirty 都保留，绝不无条件清空
     }
-    this.snapshot = null;
   }
 
   private async killProcess(): Promise<void> {
@@ -988,7 +1004,16 @@ export class RuntimeManager {
   }
 
   private async stopInternal(error: string | null): Promise<void> {
-    if (this.stopping) return;
+    // 已有 stop 在跑时不能直接返回：dispose 会据此认为清理完成、立刻 app.quit()，
+    // 把正在恢复系统代理的 PowerShell 拦腰截断，代理就留在被改状态。
+    // 改为等待同一个 in-flight 任务，确保恢复真正结束。
+    if (this.stopInFlight) { await this.stopInFlight; return; }
+    const task = this.doStop(error);
+    this.stopInFlight = task;
+    try { await task; } finally { this.stopInFlight = null; }
+  }
+
+  private async doStop(error: string | null): Promise<void> {
     this.stopping = true;
     this.cancelRestartTimer();
     try {
@@ -1005,7 +1030,12 @@ export class RuntimeManager {
       this.status.pid = null;
       this.status.startedAt = null;
       this.status.listenPort = null;
-      this.setState(error ? 'error' : 'stopped', error ? `启动失败：${error}` : '已断开，系统设置已恢复', error);
+      // 恢复失败时不能谎报「已恢复」：代理可能仍指向已死的端口，用户会被这句提示误导而继续上网失败。
+      const proxyFailed = this.proxyDirty && !this.status.systemProxy.restored;
+      const stopMsg = error ? `启动失败：${error}`
+        : proxyFailed ? `已断开内核，但系统代理恢复失败，请按日志手动还原（${this.status.systemProxy.message}）`
+        : '已断开，系统设置已恢复';
+      this.setState(error ? 'error' : 'stopped', stopMsg, error);
     } finally {
       this.stopping = false;
     }

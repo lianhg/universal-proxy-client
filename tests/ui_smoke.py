@@ -12,7 +12,7 @@ OUT = os.path.join(ROOT, "tests", "ui-smoke")
 TABS = {
     # 首页同时校验状态条与仪表盘四块真实内容
     "home": ["内核运行：", "节点信息", "快捷操作", "节点列表", "开始连接", "等待真实采样"],
-    "nodes": "节点管理",
+    "nodes": "节点管家",
     "subscribe": "订阅管理",
     "qrcode": "全协议二维码智能识别中心",
     "config": "配置导入中心",
@@ -39,6 +39,9 @@ def chrome(url, extra):
 
 
 def main():
+    if not os.path.exists(os.path.join(ROOT, "dist", "index.html")):
+        print("ERROR: dist/index.html 不存在，请先运行 npm run build")
+        return 1
     os.makedirs(OUT, exist_ok=True)
     ok = 0
     for tab, keyword in TABS.items():
@@ -64,7 +67,9 @@ def main():
             chrome(BASE + "#" + tab, ["--screenshot=" + png])
             print(f"        截图: {png} ({os.path.getsize(png)//1024 if os.path.exists(png) else 0} KB)")
     print(f"\n结果: {ok}/{len(TABS)} 个界面渲染正常")
+    return 0 if ok == len(TABS) else 1
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main())

@@ -252,6 +252,7 @@ export async function downloadKernel(opts: DownloadOptions): Promise<DownloadRes
   fs.mkdirSync(tempDir, { recursive: true });
   const archivePath = path.join(tempDir, plan.archiveName);
   const partPath = archivePath + '.part';
+  const extractDir = path.join(tempDir, `extract-${kernel}`);
 
   try {
     // ── 1. 下载压缩包 ──
@@ -330,7 +331,6 @@ export async function downloadKernel(opts: DownloadOptions): Promise<DownloadRes
       return { ok: false, kernel, version: plan.version, path: archivePath, sha256, checksumVerified, error: `暂不支持自动解压 ${plan.archiveFormat}（压缩包已保留在 ${archivePath}）` };
     }
     send({ kernel, phase: 'extract', received: size, total: size, message: '正在解压…' });
-    const extractDir = path.join(tempDir, `extract-${kernel}`);
     fs.rmSync(extractDir, { recursive: true, force: true });
     fs.mkdirSync(extractDir, { recursive: true });
     await extractZip(archivePath, extractDir);
@@ -346,9 +346,29 @@ export async function downloadKernel(opts: DownloadOptions): Promise<DownloadRes
     }
     const finalPath = path.join(binDir, plan.finalName);
     const tmpFinal = finalPath + '.new';
+    const backupFinal = finalPath + '.old';
     fs.copyFileSync(inner, tmpFinal);
-    fs.rmSync(finalPath, { force: true });
-    fs.renameSync(tmpFinal, finalPath);
+    // 原子替换：先把可用旧内核改名为备份，再把新文件扶正，最后删备份。
+    // 绝不能「先删旧文件再改名新文件」——内核正被占用时 rm 会因 EPERM 失败，
+    // 或 rm 成功而 rename 失败，两种情况都会让原本可用的内核彻底丢失。
+    const hadOld = fs.existsSync(finalPath);
+    let swapped = false;
+    try {
+      if (hadOld) {
+        fs.rmSync(backupFinal, { force: true });
+        fs.renameSync(finalPath, backupFinal);
+      }
+      fs.renameSync(tmpFinal, finalPath);
+      swapped = true;
+    } catch (e) {
+      // 任一步失败都尽力把旧内核还原，保证至少还有一个能用的二进制
+      try { fs.rmSync(tmpFinal, { force: true }); } catch { /* 尽力 */ }
+      if (hadOld && !fs.existsSync(finalPath) && fs.existsSync(backupFinal)) {
+        try { fs.renameSync(backupFinal, finalPath); } catch { /* 尽力 */ }
+      }
+      throw e;
+    }
+    if (hadOld) { try { fs.rmSync(backupFinal, { force: true }); } catch { /* 尽力 */ } }
     send({ kernel, phase: 'done', received: size, total: size, message: `${kernel} v${plan.version} 安装完成：${finalPath}${checksumVerified ? '（已通过官方校验）' : ''}` });
 
     // 清理临时产物（保留压缩包便于复查？删除更干净 —— 保留 dgst 无意义，删临时目录与压缩包）
@@ -356,7 +376,12 @@ export async function downloadKernel(opts: DownloadOptions): Promise<DownloadRes
 
     return { ok: true, kernel, version: plan.version, path: finalPath, sha256, checksumVerified };
   } catch (e) {
-    try { fs.rmSync(partPath, { force: true }); } catch { /* 忽略 */ }
+    // 失败不留半截文件：下载中的 .part、已落盘的压缩包、解压目录统统清理。
+    // 校验失败 / 疑似被篡改的压缩包尤其不能留在磁盘上被人误用。
+    for (const p of [partPath, archivePath]) {
+      try { fs.rmSync(p, { force: true }); } catch { /* 尽力 */ }
+    }
+    try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch { /* 尽力 */ }
     return fail(`下载 / 安装失败：${msg(e)}`);
   }
 }

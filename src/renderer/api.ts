@@ -247,8 +247,13 @@ export async function runtimeSpeedTestCancel(): Promise<{ ok: boolean; error?: s
 
 export async function runtimeOpenDir(kind: 'bin' | 'runtime'): Promise<string> {
   const a = api()
-  if (a?.runtimeOpenDir) return a.runtimeOpenDir(kind)
-  return ''
+  if (!a?.runtimeOpenDir) return ''
+  // 主进程失败时返回 {ok:false,error} 而非 reject；统一归一化，
+  // 让调用方只需判断「有没有拿到路径」，失败原因由主进程日志留存。
+  const r = await a.runtimeOpenDir(kind)
+  if (typeof r === 'string') return r
+  if (r && typeof r === 'object' && r.ok === false) return ''
+  return typeof r === 'string' ? r : ''
 }
 
 /** 预览将要落盘的完整内核配置（浏览器里也能用，纯计算，不接触系统） */

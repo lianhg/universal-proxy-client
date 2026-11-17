@@ -59,12 +59,38 @@ export const useAppStore = defineStore('app', () => {
 
   /* ───────── 本地持久化：节点与订阅刷新后不丢（自动更新的前提） ───────── */
   const DATA_KEY = 'upc.data.v1'
+  /** 只认结构完整的节点。UI 直接读 n.issues.some / n.kernels.includes / n.extras，
+   *  旧版本或手工改坏的缓存里若缺这些字段，首页 computed 会抛错导致整页白屏。
+   *  与 geo 缓存、首页布局缓存一样做字段级校验，脏节点宁可丢弃也不带病启动。 */
+  function validCachedNode(n: unknown): n is UnifiedNode {
+    if (!n || typeof n !== 'object') return false
+    const o = n as Record<string, unknown>
+    return typeof o.id === 'string' && typeof o.name === 'string'
+      && typeof o.protocol === 'string' && typeof o.server === 'string'
+      && typeof o.port === 'number' && Number.isFinite(o.port)
+      && Array.isArray(o.issues) && typeof o.lossless === 'boolean'
+      && Array.isArray(o.kernels) && Array.isArray(o.extras)
+      && typeof o.raw === 'string' && typeof o.source === 'string'
+  }
   try {
     const raw = localStorage.getItem(DATA_KEY)
     if (raw) {
-      const saved = JSON.parse(raw) as { nodes?: UnifiedNode[]; subscriptions?: Subscription[] }
-      if (Array.isArray(saved.nodes)) nodes.value = saved.nodes
-      if (Array.isArray(saved.subscriptions)) subscriptions.value = saved.subscriptions
+      const saved = JSON.parse(raw) as { nodes?: unknown; subscriptions?: unknown }
+      if (Array.isArray(saved.nodes)) {
+        const kept = saved.nodes.filter(validCachedNode)
+        if (kept.length !== saved.nodes.length) {
+          console.warn(`[store] 本地缓存有 ${saved.nodes.length - kept.length} 个结构不完整的节点，已跳过以防界面崩溃`)
+        }
+        nodes.value = kept
+      }
+      if (Array.isArray(saved.subscriptions)) {
+        const subs = saved.subscriptions.filter((s: unknown): s is Subscription =>
+          !!s && typeof s === 'object'
+          && typeof (s as Subscription).id === 'string'
+          && typeof (s as Subscription).url === 'string'
+          && Array.isArray((s as Subscription).proxies))
+        subscriptions.value = subs
+      }
     }
   } catch { /* 数据损坏 / 存储不可用时忽略，不阻断启动 */ }
   watch([nodes, subscriptions], () => {

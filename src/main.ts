@@ -343,12 +343,13 @@ async function geoQueryOne(host: string): Promise<{ code?: string; error?: strin
 }
 
 ipcMain.handle('geo:lookup', async (_evt, servers: unknown) => {
-  if (!Array.isArray(servers)) return { ok: false, error: '参数必须是字符串数组', results: {} }
+  // 与成功分支保持同一结构：无论成败都带 results / queried，渲染层不用到处判空
+  if (!Array.isArray(servers)) return { ok: false, error: '参数必须是字符串数组', results: {}, queried: 0 }
   const hosts = [...new Set(servers
     .filter((s): s is string => typeof s === 'string')
     .map(s => s.trim())
     .filter(s => s.length > 0 && s.length <= 253))].slice(0, 64)
-  if (!hosts.length) return { ok: true, results: {} }
+  if (!hosts.length) return { ok: true, results: {}, queried: 0 }
 
   const cache = loadGeoCache()
   const results: Record<string, { code?: string; error?: string; source: string }> = {}
@@ -442,9 +443,18 @@ ipcMain.handle('runtime:probe-sites', async (_evt, hosts: string[]) => {
 })
 
 ipcMain.handle('runtime:open-dir', async (_evt, kind: 'bin' | 'runtime') => {
-  const dir = kind === 'bin' ? await runtime.openBinDir() : await runtime.openRuntimeDir()
-  await shell.openPath(dir)
-  return dir
+  // 建目录 / 资源管理器打开失败时必须返回可识别的错误，不能让 invoke reject：
+  // 渲染层 openDir 没有 catch，reject 会变成未处理的 Promise 拒绝，界面表现为「点了没反应」。
+  try {
+    const dir = kind === 'bin' ? await runtime.openBinDir() : await runtime.openRuntimeDir()
+    const err = await shell.openPath(dir)
+    if (err) throw new Error(err)
+    return dir
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    log(`打开目录未捕获异常：${msg}`)
+    return { ok: false, error: `打开目录失败：${msg}` }
+  }
 })
 
 /* --------------------- 内核二进制下载（用户显式点击触发） --------------------- */
