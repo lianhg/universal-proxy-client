@@ -72,18 +72,34 @@ function parseProxy(url: string): { host: string; port: number } {
  * 自动跟随 301/302/303/307/308 重定向（GitHub Release 会 302 到 objects.githubusercontent.com），最多 5 跳。
  * 返回最终响应对象（不消费 body）。
  */
-function requestOnce(url: string, proxyUrl: string | undefined, timeoutMs: number): Promise<http.IncomingMessage> {
+function requestOnce(url: string, proxyUrl: string | undefined, timeoutMs: number, signal?: AbortSignal): Promise<http.IncomingMessage> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(new Error('下载已取消')); return; }
     const target = new URL(url);
     if (target.protocol !== 'https:') {
       reject(new Error(`仅支持 https 下载地址，收到 ${target.protocol}//`));
       return;
     }
-    const onTimeout = () => reject(new Error(`请求超时（${timeoutMs / 1000}s）：${url}`));
+    let activeRequest: http.ClientRequest | null = null;
+    let settled = false;
+    const finish = (error?: Error, response?: http.IncomingMessage) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener('abort', onAbort);
+      if (error) reject(error); else if (response) resolve(response);
+    };
+    const onAbort = () => {
+      const error = new Error('下载已取消');
+      if (activeRequest) activeRequest.destroy(error);
+      finish(error);
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+    const onTimeout = () => finish(new Error(`请求超时（${timeoutMs / 1000}s）：${url}`));
     if (!proxyUrl) {
-      const req = https.get(url, { timeout: timeoutMs }, res => resolve(res));
+      const req = https.get(url, { timeout: timeoutMs }, res => finish(undefined, res));
+      activeRequest = req;
       req.on('timeout', () => { req.destroy(); onTimeout(); });
-      req.on('error', reject);
+      req.on('error', e => finish(e));
       return;
     }
     const proxy = parseProxy(proxyUrl);
@@ -91,12 +107,12 @@ function requestOnce(url: string, proxyUrl: string | undefined, timeoutMs: numbe
       host: proxy.host, port: proxy.port, method: 'CONNECT',
       path: `${target.hostname}:443`, timeout: timeoutMs,
     });
+    activeRequest = req;
     req.on('timeout', () => { req.destroy(); onTimeout(); });
-    req.on('error', reject);
     req.on('connect', (res, socket) => {
       if (res.statusCode !== 200) {
         socket.destroy();
-        reject(new Error(`代理 ${proxyUrl} 建立隧道失败：HTTP ${res.statusCode}`));
+        finish(new Error(`代理 ${proxyUrl} 建立隧道失败：HTTP ${res.statusCode}`));
         return;
       }
       const tlsReq = https.request({
@@ -104,19 +120,21 @@ function requestOnce(url: string, proxyUrl: string | undefined, timeoutMs: numbe
         path: target.pathname + target.search, method: 'GET',
         agent: false, timeout: timeoutMs,
         createConnection: () => socket,
-      }, inner => resolve(inner));
+      }, inner => finish(undefined, inner));
+      activeRequest = tlsReq;
       tlsReq.on('timeout', () => { tlsReq.destroy(); onTimeout(); });
-      tlsReq.on('error', reject);
+      tlsReq.on('error', e => finish(e));
       tlsReq.end();
     });
+    req.on('error', e => finish(e));
     req.end();
   });
 }
 
-async function request(url: string, proxyUrl?: string, timeoutMs = 30000): Promise<http.IncomingMessage> {
+async function request(url: string, proxyUrl?: string, timeoutMs = 30000, signal?: AbortSignal): Promise<http.IncomingMessage> {
   let current = url;
   for (let hop = 0; hop < 6; hop++) {
-    const res = await requestOnce(current, proxyUrl, timeoutMs);
+    const res = await requestOnce(current, proxyUrl, timeoutMs, signal);
     if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0)) {
       const loc = res.headers.location;
       res.resume();
@@ -157,7 +175,7 @@ function downloadToFile(
   return new Promise((resolve, reject) => {
     void (async () => {
       let res: http.IncomingMessage;
-      try { res = await request(url, proxyUrl); }
+      try { res = await request(url, proxyUrl, 30000, signal); }
       catch (e) { reject(e); return; }
       if (res.statusCode !== 200) {
         res.resume();
@@ -169,16 +187,32 @@ function downloadToFile(
       const out = fs.createWriteStream(filePath);
       let received = 0;
       let lastTick = 0;
+      let settled = false;
+      const cleanup = () => signal?.removeEventListener('abort', onAbort);
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (error) reject(error);
+        else resolve({ sha256: hash.digest('hex'), size: received, total });
+      };
+      const onAbort = () => {
+        const error = new Error('下载已取消');
+        res.destroy();
+        out.destroy();
+        finish(error);
+      };
+      if (signal?.aborted) { onAbort(); return; }
+      signal?.addEventListener('abort', onAbort, { once: true });
       res.on('data', (c: Buffer) => {
-        if (signal?.aborted) { res.destroy(); out.destroy(); reject(new Error('下载已取消')); return; }
         received += c.length;
         hash.update(c);
         const now = Date.now();
         if (now - lastTick > 300) { lastTick = now; onProgress(received, total); }
       });
-      res.on('error', e => { out.destroy(); reject(e); });
-      out.on('error', e => reject(e));
-      out.on('finish', () => resolve({ sha256: hash.digest('hex'), size: received, total }));
+      res.on('error', e => { out.destroy(); finish(e); });
+      out.on('error', e => finish(e));
+      out.on('finish', () => finish());
       res.pipe(out);
     })();
   });

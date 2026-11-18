@@ -64,6 +64,9 @@ const speedTester = new SpeedTester({
   getSettings: () => runtime.getSettings(),
 })
 
+/** 应用退出时中止正在进行的内核下载，避免请求或临时文件写入继续挂起。 */
+const activeDownloads = new Set<AbortController>()
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100,
@@ -131,6 +134,7 @@ app.on('before-quit', (e) => {
   e.preventDefault()
   // 先杀测速的临时内核，避免进程退出后留下孤儿进程
   try { speedTester.cancel() } catch { /* 忽略 */ }
+  for (const controller of activeDownloads) controller.abort()
   void runtime.dispose().catch(err => console.error('[runtime] 退出清理失败：', err)).finally(() => app.quit())
 })
 
@@ -264,8 +268,36 @@ ipcMain.handle('fetch-subscription', async (_evt, url: string) => {
       headers: { 'User-Agent': 'universal-proxy-client/1.0', Accept: '*/*' },
     })
     if (!resp.ok) return { ok: false, error: `HTTP ${resp.status} ${resp.statusText}` }
-    const text = await resp.text()
-    if (text.length > 2 * 1024 * 1024) return { ok: false, error: '订阅内容超过 2MB 上限，已拒绝' }
+    // 在读取流时限制实际字节数，避免先把无限制响应完整缓存在内存里再检查。
+    // Content-Length 仅用于快速拒绝，仍以流中累计的字节数为准（响应头可能缺失或不准确）。
+    const maxBytes = 2 * 1024 * 1024
+    const contentLength = Number(resp.headers.get('content-length'))
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+      await resp.body?.cancel()
+      return { ok: false, error: '订阅内容超过 2MB 上限，已拒绝' }
+    }
+    if (!resp.body) return { ok: false, error: '订阅响应没有内容' }
+    const reader = resp.body.getReader()
+    const chunks: Uint8Array[] = []
+    let totalBytes = 0
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        totalBytes += value.byteLength
+        if (totalBytes > maxBytes) {
+          await reader.cancel()
+          return { ok: false, error: '订阅内容超过 2MB 上限，已拒绝' }
+        }
+        chunks.push(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
+    const bytes = new Uint8Array(totalBytes)
+    let offset = 0
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength }
+    const text = new TextDecoder().decode(bytes)
     return { ok: true, text, contentType: resp.headers.get('content-type') ?? '' }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
@@ -471,15 +503,18 @@ ipcMain.handle('runtime:latest-versions', (_evt, proxyUrl?: string) => fetchLate
  * 进度通过 runtime:event 推送，落盘前先过校验。
  */
 ipcMain.handle('runtime:download-binary', async (_evt, kernel: KernelTypeForDownload, version?: string, proxyUrl?: string) => {
+  const controller = new AbortController()
+  activeDownloads.add(controller)
   try {
     const binDir = await runtime.openBinDir()
     return await downloadKernel({
       kernel, version: version || undefined, binDir, proxyUrl: proxyUrl || undefined,
+      signal: controller.signal,
       send: p => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('runtime:event', { type: 'download', download: p }) },
     })
   } catch (e) {
     return { ok: false, kernel, error: e instanceof Error ? e.message : String(e) }
-  }
+  } finally { activeDownloads.delete(controller) }
 })
 
 

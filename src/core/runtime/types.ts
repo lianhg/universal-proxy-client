@@ -71,10 +71,22 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = {
   binaryPaths: {},
 };
 
-/** 某个内核真正会 bind 的本地端口（Xray 无 mixed 入站、无 clash_api，只有 socks/http） */
+/** 某个内核真正会 bind 的本地端口（Xray 使用独立 API 入站端口；其它内核含 mixed 与控制端口） */
 export function boundPortsOf(kernel: KernelType, s: RuntimeSettings): number[] {
   const base = [s.socksPort, s.httpPort];
-  return kernel === 'xray' ? base : [s.mixedPort, ...base, s.controllerPort];
+  return kernel === 'xray' ? [...base, s.controllerPort] : [s.mixedPort, ...base, s.controllerPort];
+}
+
+/** 把绑定地址转换为本机客户端可连接的地址；通配地址应通过回环地址访问。 */
+export function localProxyHost(listenAddress: string): string {
+  const host = String(listenAddress ?? '').trim();
+  return !host || host === '0.0.0.0' || host === '::' || host === '::0' ? '127.0.0.1' : host;
+}
+
+/** 生成系统代理可解析的 host:port；IPv6 地址必须加方括号。 */
+export function localProxyServer(listenAddress: string, port: number): string {
+  const host = localProxyHost(listenAddress);
+  return `${host.includes(':') ? `[${host}]` : host}:${port}`;
 }
 
 export function mergeRuntimeSettings(input?: Partial<RuntimeSettings>): RuntimeSettings {

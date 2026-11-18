@@ -15,7 +15,7 @@ import { spawn, execFile, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { KernelType, UnifiedNode } from '../../core/hub/model.js';
 import {
-  DEFAULT_RUNTIME_SETTINGS, KERNEL_BIN_NAMES, boundPortsOf, emptyStatus, mergeRuntimeSettings,
+  DEFAULT_RUNTIME_SETTINGS, KERNEL_BIN_NAMES, boundPortsOf, emptyStatus, localProxyHost, localProxyServer, mergeRuntimeSettings,
   type BinaryInventory, type KernelBinary, type RuntimeLog, type RuntimeMode,
   type RuntimeResult, type RuntimeSettings, type RuntimeStartRequest, type RuntimeStatus,
   type SystemProxySnapshot,
@@ -75,9 +75,9 @@ function isUsablePort(p: number): boolean {
  * 挑一个可用端口：优先保留用户设定值；被占用则依次在冷门池、兜底区间里找第一个空闲的。
  * `skip` 里的端口视为可用（热切换时旧内核还占着，但那正是我们自己要复用的端口）。
  */
-async function pickFreePort(preferred: number, used: Set<number>, skip: Set<number>): Promise<number> {
+async function pickFreePort(preferred: number, used: Set<number>, skip: Set<number>, host = '127.0.0.1'): Promise<number> {
   const free = async (p: number) =>
-    isUsablePort(p) && !used.has(p) && (skip.has(p) || !(await tcpProbe(p)));
+    isUsablePort(p) && !used.has(p) && (skip.has(p) || !(await tcpProbe(p, host)));
   if (await free(preferred)) return preferred;
   for (let p = COLD_PORT_POOL_START; p < COLD_PORT_POOL_START + COLD_PORT_POOL_SIZE; p++) {
     if (await free(p)) return p;
@@ -379,7 +379,7 @@ export class RuntimeManager {
 
       // 系统代理：先读快照，再写入；任何失败都回滚
       if (settings.mode === 'system-proxy') {
-        const server = `127.0.0.1:${kernel === 'xray' ? settings.httpPort : settings.mixedPort}`;
+        const server = localProxyServer(settings.listenAddress, kernel === 'xray' ? settings.httpPort : settings.mixedPort);
         const read = readSystemProxyScript(process.platform);
         if (!read) throw new Error('当前平台不支持自动读取系统代理快照');
         const raw = await this.runPS(read.script, 'read');
@@ -436,10 +436,10 @@ export class RuntimeManager {
     const keys: Array<'mixedPort' | 'socksPort' | 'httpPort' | 'controllerPort'> =
       allPorts
         ? ['mixedPort', 'socksPort', 'httpPort', 'controllerPort']
-        : kernel === 'xray' ? ['socksPort', 'httpPort'] : ['mixedPort', 'socksPort', 'httpPort', 'controllerPort'];
+        : kernel === 'xray' ? ['socksPort', 'httpPort', 'controllerPort'] : ['mixedPort', 'socksPort', 'httpPort', 'controllerPort'];
     for (const key of keys) {
       const wanted = next[key];
-      const port = await pickFreePort(wanted, used, skip);
+      const port = await pickFreePort(wanted, used, skip, localProxyHost(next.listenAddress));
       used.add(port);
       if (port !== wanted) {
         const owner = await findPortOwner(wanted);
@@ -543,7 +543,7 @@ export class RuntimeManager {
     // 候选端口组必须与当前连接完全隔离；controllerPort 也要算（Xray 的 api-in 同样占端口）
     const ports = [...new Set([...boundPortsOf(kernel, settings), settings.controllerPort])];
     const occupied: number[] = [];
-    for (const p of ports) if (await tcpProbe(p)) occupied.push(p);
+    for (const p of ports) if (await tcpProbe(p, localProxyHost(settings.listenAddress))) occupied.push(p);
     if (occupied.length) {
       try { fs.rmSync(configPath, { force: true }); } catch { /* ignore */ }
       throw new Error(`候选端口 ${occupied.join('、')} 已被占用，无法并行验证（当前连接未受影响）`);
@@ -581,7 +581,7 @@ export class RuntimeManager {
     let healthy = false;
     for (let i = 0; i < 32; i++) {
       if (child.exitCode !== null) break;
-      if (await tcpProbe(probePort)) { healthy = true; break; }
+      if (await tcpProbe(probePort, localProxyHost(settings.listenAddress))) { healthy = true; break; }
       await new Promise(r => setTimeout(r, 250));
     }
     if (!healthy) {
@@ -622,7 +622,7 @@ export class RuntimeManager {
     // 端口预检（兜底）：正常路径已由 resolveFreePorts 避让过，这里只防「刚探测完就被别人抢」的竞态
     const occupied: number[] = [];
     for (const p of boundPortsOf(kernel, this.settings)) {
-      if (await tcpProbe(p)) occupied.push(p);
+      if (await tcpProbe(p, localProxyHost(this.settings.listenAddress))) occupied.push(p);
     }
     if (occupied.length) {
       const owner = await findPortOwner(occupied[0]);
@@ -681,7 +681,7 @@ export class RuntimeManager {
     let healthy = false;
     for (let i = 0; i < 32; i++) {
       if (!this.proc) break;
-      if (await tcpProbe(probePort)) { healthy = true; break; }
+      if (await tcpProbe(probePort, localProxyHost(this.settings.listenAddress))) { healthy = true; break; }
       await new Promise(r => setTimeout(r, 250));
     }
     if (!healthy) {
@@ -860,7 +860,7 @@ export class RuntimeManager {
         kernel, binaryPath: binary.path, configText: built.text,
         settings: candidateSettings, filename: candidateFilename,
       });
-      const newServer = `127.0.0.1:${kernel === 'xray' ? candidateSettings.httpPort : candidateSettings.mixedPort}`;
+      const newServer = localProxyServer(candidateSettings.listenAddress, kernel === 'xray' ? candidateSettings.httpPort : candidateSettings.mixedPort);
 
       // ② 先把系统代理改指向候选（候选已健康，此刻两个内核都可用）；失败就只清候选
       if (candidateSettings.mode === 'system-proxy' && this.status.systemProxy?.applied) {

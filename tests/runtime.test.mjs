@@ -259,11 +259,19 @@ t('默认端口落在冷门段，避开 v2rayN / Clash 常占端口', () => {
   assert.equal(new Set([d.socksPort, d.httpPort, d.mixedPort, d.controllerPort]).size, 4, '四个默认端口不能重复');
 });
 
-t('boundPortsOf：Xray 只绑 SOCKS/HTTP，其它内核多绑 mixed + 控制端口', () => {
+t('boundPortsOf：Xray 绑定 SOCKS/HTTP/API，其它内核多绑 mixed + 控制端口', () => {
   const s = T.mergeRuntimeSettings();
-  assert.deepEqual(T.boundPortsOf('xray', s), [s.socksPort, s.httpPort]);
+  assert.deepEqual(T.boundPortsOf('xray', s), [s.socksPort, s.httpPort, s.controllerPort]);
   assert.deepEqual(T.boundPortsOf('sing-box', s), [s.mixedPort, s.socksPort, s.httpPort, s.controllerPort]);
   assert.deepEqual(T.boundPortsOf('mihomo', s), [s.mixedPort, s.socksPort, s.httpPort, s.controllerPort]);
+});
+
+t('自定义绑定地址作为本地代理目标，通配绑定地址回退到回环地址', () => {
+  assert.equal(T.localProxyHost('192.168.1.10'), '192.168.1.10');
+  assert.equal(T.localProxyHost('0.0.0.0'), '127.0.0.1');
+  assert.equal(T.localProxyHost('::'), '127.0.0.1');
+  assert.equal(T.localProxyServer('192.168.1.10', 21809), '192.168.1.10:21809');
+  assert.equal(T.localProxyServer('::1', 21809), '[::1]:21809');
 });
 
 t('emptyStatus 标记浏览器预览不可用', () => {

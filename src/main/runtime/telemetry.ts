@@ -16,6 +16,7 @@ import net from 'node:net';
 import { tcpProbe } from './net-probe.js';
 import tls from 'node:tls';
 import type { KernelType } from '../../core/hub/model.js';
+import { localProxyHost } from '../../core/runtime/types.js';
 import {
   applySample, DEFAULT_PROBE_SITES, classifyProbeError, diagnoseProbe, emptyTelemetry,
   failedAttempt, kernelTelemetryCapability, parseClashConnections, probeGroupOf, verdictOf,
@@ -54,7 +55,9 @@ export class TelemetryCollector {
   private ctx: Ctx | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private tick = 0;
-  private polling = false;
+  /** 当前正在采样的上下文代次；切换节点时允许新旧上下文短暂并行，旧结果会被丢弃。 */
+  private generation = 0;
+  private pollingGeneration: number | null = null;
 
   constructor(opts: CollectorOptions) {
     this.send = opts.send;
@@ -106,27 +109,31 @@ export class TelemetryCollector {
 
   /** 立即采样一次；供测试与手动刷新调用 */
   async pollOnce(): Promise<TelemetrySnapshot> {
-    if (!this.ctx) return this.getSnapshot();
-    if (this.polling) return this.getSnapshot();
-    this.polling = true;
+    const ctx = this.ctx;
+    if (!ctx) return this.getSnapshot();
+    const generation = this.generation;
+    if (this.pollingGeneration === generation) return this.getSnapshot();
+    this.pollingGeneration = generation;
     try {
-      const payload = this.ctx.kernel === 'xray'
+      const payload = ctx.kernel === 'xray'
         ? await this.pollXrayStats()
         : parseClashConnections(await this.request('/connections'));
       let version = this.snapshot.kernelVersion;
-      if (this.ctx.kernel !== 'xray' && this.tick % 30 === 0) {
+      if (ctx.kernel !== 'xray' && this.tick % 30 === 0) {
         try {
           const v = await this.request('/version') as Record<string, unknown>;
           version = String(v.version ?? v.meta ?? v.kernel ?? '').slice(0, 80) || version;
         } catch { /* 版本接口可选，失败不影响统计 */ }
       }
+      if (generation !== this.generation || this.ctx !== ctx) return this.getSnapshot();
       this.tick++;
       this.snapshot = applySample(this.snapshot, payload, Date.now(), version);
     } catch (e) {
+      if (generation !== this.generation || this.ctx !== ctx) return this.getSnapshot();
       const error = e instanceof Error ? e.message : String(e);
       // ctx 可能在本轮采样途中被 stop() / start() 置空（切换节点时必然发生）：
       // 这里若直接读 this.ctx.kernel 会再抛一次 TypeError，变成 unhandledRejection。
-      const kernel = this.ctx?.kernel ?? this.snapshot.kernel ?? 'xray';
+      const kernel = ctx.kernel ?? this.snapshot.kernel ?? 'xray';
       // 失败时速率必须归零，历史与累计值保留，界面显示具体错误
       this.snapshot = {
         ...emptyTelemetry(kernel, `采样失败：${error}`),
@@ -139,8 +146,8 @@ export class TelemetryCollector {
         error,
       };
     } finally {
-      this.polling = false;
-      this.emit();
+      if (this.pollingGeneration === generation) this.pollingGeneration = null;
+      if (generation === this.generation && this.ctx === ctx) this.emit();
     }
     return this.getSnapshot();
   }
@@ -164,6 +171,7 @@ export class TelemetryCollector {
 
   /** 停止采集；silent=true 时不推事件（用于内部重启） */
   stop(silent = false, reason = '内核已断开，实时数据停止采样'): void {
+    this.generation++;
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
     const kernel = this.ctx?.kernel ?? this.snapshot.kernel;
     this.ctx = null;
@@ -203,7 +211,8 @@ export class TelemetryCollector {
     const proxyPort = this.getHttpPort();
     const state = this.getRuntimeState();
     // 光看 status.running 不够：内核可能起了但 HTTP 入站没监听，必须真连一次端口
-    const listening = state.running ? await tcpProbe(proxyPort, '127.0.0.1', 400) : false;
+    const proxyHost = localProxyHost(this.ctx?.listen ?? '127.0.0.1');
+    const listening = state.running ? await tcpProbe(proxyPort, proxyHost, 400) : false;
     const proxyRunning = state.running && listening;
     const cleaned: string[] = [];
     for (const raw of (hosts ?? []).slice(0, 8)) {
@@ -217,7 +226,7 @@ export class TelemetryCollector {
       const [direct, viaProxy] = await Promise.all([
         probeReachability({ host, port: 443, useTls: true, timeoutMs: PROBE_TIMEOUT_MS }),
         proxyRunning
-          ? probeReachability({ host, port: 443, useTls: true, proxyPort, timeoutMs: PROBE_TIMEOUT_MS + 1500 })
+          ? probeReachability({ host, port: 443, useTls: true, proxyPort, proxyHost, timeoutMs: PROBE_TIMEOUT_MS + 1500 })
           : Promise.resolve(failedAttempt(
               'not-running',
               state.running
@@ -249,6 +258,8 @@ interface ReachabilityOpts {
   useTls: boolean;
   /** 有值 = 经本地 HTTP 代理（CONNECT 隧道），无值 = 直连 */
   proxyPort?: number;
+  /** 本地 HTTP 代理的监听地址；通配地址会由调用方映射为回环地址 */
+  proxyHost?: string;
   timeoutMs?: number;
   path?: string;
 }
@@ -267,7 +278,7 @@ function errorText(e: unknown): string {
  */
 export function probeReachability(opts: ReachabilityOpts): Promise<ProbeAttempt> {
   const {
-    host, port, useTls, proxyPort, timeoutMs = PROBE_TIMEOUT_MS, path = '/',
+    host, port, useTls, proxyPort, proxyHost = '127.0.0.1', timeoutMs = PROBE_TIMEOUT_MS, path = '/',
   } = opts;
   const via: ProbeAttempt['via'] = proxyPort
     ? (useTls ? 'https-proxy' : 'http-proxy')
@@ -350,9 +361,9 @@ export function probeReachability(opts: ReachabilityOpts): Promise<ProbeAttempt>
     const chunks: Buffer[] = [];
     let sock: net.Socket;
     try {
-      sock = net.connect({ host: '127.0.0.1', port: proxyPort });
+      sock = net.connect({ host: proxyHost, port: proxyPort });
     } catch (e) {
-      fail('refused', `连不上本地代理 127.0.0.1:${proxyPort}：${errorText(e)}`);
+      fail('refused', `连不上本地代理 ${proxyHost}:${proxyPort}：${errorText(e)}`);
       return;
     }
     socket = sock;
