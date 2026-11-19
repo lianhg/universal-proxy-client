@@ -7,7 +7,7 @@ import { emptyStatus, mergeRuntimeSettings } from '../core/runtime/types.js'
 import {
   emptyTelemetry, type ProbeReport, type ProbeResult, type TelemetrySnapshot,
 } from '../core/runtime/telemetry.js'
-import { cloneRoutingConfig, type RoutingConfig } from '../core/runtime/rules.js'
+import { cloneRoutingConfig, isLegacyDefaultRules, type RoutingConfig } from '../core/runtime/rules.js'
 import type { SpeedTestOptions, SpeedTestRow } from '../core/runtime/speedtest.js'
 import { DEFAULT_SPEEDTEST_OPTIONS } from '../core/runtime/speedtest.js'
 import * as runtimeApi from './api.js'
@@ -146,7 +146,16 @@ export const useAppStore = defineStore('app', () => {
   function loadRouting(): RoutingConfig {
     try {
       const raw = localStorage.getItem(ROUTING_KEY)
-      if (raw) return cloneRoutingConfig(JSON.parse(raw) as Partial<RoutingConfig>)
+      if (raw) {
+        const parsed = cloneRoutingConfig(JSON.parse(raw) as Partial<RoutingConfig>)
+        // 1.1.x 用户存的是旧默认三条（MATCH→PROXY 兜底会把国内流量也绕到节点）。
+        // 用户从未自定义过规则时，升级到带国内直连的新默认集；改过一条都原样保留。
+        if (parsed.defaultAction === 'PROXY' && isLegacyDefaultRules(parsed.rules)) {
+          log('info', '[rules]', '检测到 1.1.x 旧默认规则集，已升级为含国内直连的新默认规则')
+          return cloneRoutingConfig()
+        }
+        return parsed
+      }
     } catch { /* 首次启动 / 存储不可用，用默认规则 */ }
     return cloneRoutingConfig()
   }

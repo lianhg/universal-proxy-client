@@ -58,6 +58,29 @@ t('默认规则三内核都能完整下发（不会一上来就阻断）', () =>
     assert.ok(b.items.length >= 3);
   }
 });
+t('默认规则包含国内直连白名单（国内站不再绕道代理节点）', () => {
+  const cfg = R.cloneRoutingConfig();
+  for (const payload of ['baidu.com', 'bilibili.com', 'eastmoney.com', 'xueqiu.com', 'jd.com']) {
+    const r = cfg.rules.find(x => x.kind === 'DOMAIN-SUFFIX' && x.payload === payload);
+    assert.ok(r, `缺少国内直连规则：${payload}`);
+    assert.equal(r.action, 'DIRECT', `${payload} 应为直连`);
+    assert.equal(r.enabled, true, `${payload} 应默认启用`);
+  }
+  const catchAll = cfg.rules.find(x => x.kind === 'MATCH');
+  assert.ok(catchAll && catchAll.action === 'PROXY', 'MATCH 兜底必须仍是 PROXY（不影响翻出去）');
+});
+t('isLegacyDefaultRules：旧默认三条识别为旧版，新默认与自定义规则不算', () => {
+  const legacy = [
+    R.createRule({ kind: 'DOMAIN-SUFFIX', payload: 'localhost', action: 'DIRECT' }),
+    R.createRule({ kind: 'DOMAIN-SUFFIX', payload: 'local', action: 'DIRECT' }),
+    R.createRule({ kind: 'MATCH', payload: '', action: 'PROXY' }),
+  ];
+  assert.equal(R.isLegacyDefaultRules(legacy), true);
+  assert.equal(R.isLegacyDefaultRules(R.cloneRoutingConfig().rules), false, '新默认规则集不能被判成旧默认');
+  const customized = [...legacy, R.createRule({ kind: 'DOMAIN-SUFFIX', payload: 'foo.com', action: 'PROXY' })];
+  assert.equal(R.isLegacyDefaultRules(customized), false, '用户改过的规则集必须原样保留');
+  assert.equal(R.isLegacyDefaultRules([]), false);
+});
 t('Xray DOMAIN-SUFFIX 转成 domain: 前缀', () => {
   const cfg = R.cloneRoutingConfig({ rules: [R.createRule({ kind: 'DOMAIN-SUFFIX', payload: 'google.com', action: 'PROXY' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
   const b = R.buildRoutingForKernel(cfg, 'xray', vless.name);

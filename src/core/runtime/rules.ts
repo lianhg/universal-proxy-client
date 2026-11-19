@@ -53,11 +53,62 @@ export function createRule(partial: Partial<RoutingRule> = {}): RoutingRule {
   };
 }
 
-/** 默认只放三个内核都能表达的规则，避免用户一选 Xray 就被规则能力差异挡住 */
+/**
+ * 高频国内站点直连白名单（DOMAIN-SUFFIX，三内核通用表达）。
+ * 为什么要这个：旧默认规则只有 MATCH→PROXY 兜底，访问国内网站也会绕道代理节点，
+ * 延迟翻倍还吃节点带宽；这里把大流量国内站直接放直连，只有未命中的流量才进代理。
+ */
+export const CN_DIRECT_SUFFIXES: ReadonlyArray<{ payload: string; comment: string }> = [
+  { payload: 'baidu.com', comment: '百度' },
+  { payload: 'qq.com', comment: '腾讯门户' },
+  { payload: 'tencent.com', comment: '腾讯服务' },
+  { payload: 'taobao.com', comment: '淘宝' },
+  { payload: 'tmall.com', comment: '天猫' },
+  { payload: '1688.com', comment: '阿里批发' },
+  { payload: 'alipay.com', comment: '支付宝' },
+  { payload: 'aliyun.com', comment: '阿里云' },
+  { payload: 'jd.com', comment: '京东' },
+  { payload: 'bilibili.com', comment: '哔哩哔哩' },
+  { payload: 'weibo.com', comment: '微博' },
+  { payload: 'zhihu.com', comment: '知乎' },
+  { payload: 'douyin.com', comment: '抖音' },
+  { payload: 'kuaishou.com', comment: '快手' },
+  { payload: '163.com', comment: '网易' },
+  { payload: '126.com', comment: '网易邮箱' },
+  { payload: 'netease.com', comment: '网易服务' },
+  { payload: 'mi.com', comment: '小米' },
+  { payload: 'xiaomi.com', comment: '小米服务' },
+  { payload: 'so.com', comment: '360搜索' },
+  { payload: '360.cn', comment: '360' },
+  { payload: 'csdn.net', comment: 'CSDN' },
+  { payload: 'xueqiu.com', comment: '雪球' },
+  { payload: 'eastmoney.com', comment: '东方财富' },
+  { payload: '10jqka.com.cn', comment: '同花顺' },
+];
+
+/** 1.1.x 的默认规则集（仅 3 条）；升级后用于识别「用户没自定义过规则」从而平滑迁移 */
+const LEGACY_DEFAULT_RULES: ReadonlyArray<{ kind: RuleKind; payload: string; action: RuleAction }> = [
+  { kind: 'DOMAIN-SUFFIX', payload: 'localhost', action: 'DIRECT' },
+  { kind: 'DOMAIN-SUFFIX', payload: 'local', action: 'DIRECT' },
+  { kind: 'MATCH', payload: '', action: 'PROXY' },
+];
+
+/** 判断规则列表是否还是 1.1.x 的旧默认（用户没改过）：是则升级时替换为新默认规则集 */
+export function isLegacyDefaultRules(rules: RoutingRule[]): boolean {
+  const active = rules.filter(r => r.enabled);
+  if (active.length !== LEGACY_DEFAULT_RULES.length) return false;
+  return active.every((r, i) =>
+    r.kind === LEGACY_DEFAULT_RULES[i].kind &&
+    r.payload === LEGACY_DEFAULT_RULES[i].payload &&
+    r.action === LEGACY_DEFAULT_RULES[i].action);
+}
+
+/** 默认规则三内核都能完整表达（GEOSITE/GEOIP 需要 geo 资源文件，只给 Mihomo 用户手动添加），避免用户一选 Xray 就被规则能力差异挡住 */
 export const DEFAULT_ROUTING_CONFIG: RoutingConfig = {
   rules: [
     createRule({ kind: 'DOMAIN-SUFFIX', payload: 'localhost', action: 'DIRECT', comment: '本机地址直连' }),
     createRule({ kind: 'DOMAIN-SUFFIX', payload: 'local', action: 'DIRECT', comment: '本地域名直连' }),
+    ...CN_DIRECT_SUFFIXES.map(d => createRule({ kind: 'DOMAIN-SUFFIX', payload: d.payload, action: 'DIRECT', comment: `国内直连：${d.comment}` })),
     createRule({ kind: 'MATCH', payload: '', action: 'PROXY', comment: '其余流量走代理' }),
   ],
   defaultAction: 'PROXY',
