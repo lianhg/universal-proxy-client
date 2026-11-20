@@ -32,6 +32,8 @@ export interface RoutingConfig {
   bypassLan: boolean;
   dnsEnabled: boolean;
   dnsServers: string[];
+  /** Mihomo 下发时自动追加 GEOSITE:cn / GEOIP:cn 国内全量直连（默认开启）；Xray/sing-box 无 geo 资源，自动忽略 */
+  autoCnDirect?: boolean;
 }
 
 export const RULE_KINDS: RuleKind[] = [
@@ -125,6 +127,7 @@ export function cloneRoutingConfig(input?: Partial<RoutingConfig>): RoutingConfi
     bypassLan: input?.bypassLan ?? base.bypassLan,
     dnsEnabled: input?.dnsEnabled ?? base.dnsEnabled,
     dnsServers: [...(input?.dnsServers?.length ? input.dnsServers : base.dnsServers)],
+    autoCnDirect: input?.autoCnDirect ?? true,
   };
 }
 
@@ -306,6 +309,25 @@ export function buildRoutingForKernel(cfg: RoutingConfig, kernel: KernelType, pr
         ? `MATCH,${r.action}`
         : `${r.kind},${r.payload},${r.action}${r.comment ? ',' + r.comment : ''}`;
       items.push(text);
+    }
+  }
+
+  // Mihomo 专属增强：自动追加国内全量直连（GEOSITE 域名库 + GEOIP IP 库）。
+  // 白名单只有 25 个高频站，白名单外的国内站走节点会绕路且暴露国外 IP；
+  // Mihomo 运行时会自动下载 geo 数据（geosite.dat / geoip.metadb），无需随程序分发。
+  // 用户已手动配置过 GEOSITE/GEOIP 的 cn 规则时不重复追加，尊重手动配置。
+  // 注意：必须插在第一条 MATCH 兜底之前——内核规则自上而下匹配，落在兜底之后的规则永远不生效。
+  if (kernel === 'mihomo' && cfg.autoCnDirect !== false) {
+    const hasGeositeCn = active.some(r => r.kind === 'GEOSITE' && r.payload.toLowerCase() === 'cn');
+    const hasGeoipCn = active.some(r => r.kind === 'GEOIP' && r.payload.toLowerCase() === 'cn');
+    if (!hasGeositeCn || !hasGeoipCn) {
+      const extra: string[] = [];
+      if (!hasGeositeCn) extra.push('GEOSITE,cn,DIRECT,自动：国内域名全量直连');
+      if (!hasGeoipCn) extra.push('GEOIP,cn,DIRECT,no-resolve,自动：国内IP全量直连');
+      const matchIdx = items.findIndex(x => typeof x === 'string' && x.startsWith('MATCH'));
+      const insertAt = matchIdx >= 0 ? matchIdx : items.length;
+      items.splice(insertAt, 0, ...extra);
+      issues.push(issue('info', 'ENHANCED', '已为 Mihomo 自动追加国内全量直连（GEOSITE:cn / GEOIP:cn），白名单外的国内站也走本地网络', { kernel }));
     }
   }
 

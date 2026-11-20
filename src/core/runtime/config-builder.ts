@@ -267,6 +267,14 @@ export function buildRuntimeConfig(
     (config as any)['bind-address'] = listen;
     (config as any)['log-level'] = levelForMihomo(settings.logLevel);
     (config as any)['external-controller'] = `${listen}:${settings.controllerPort}`;
+    // geo 数据源改走 jsdelivr 镜像：默认 GitHub release 直连国内经常失败，
+    // 而首次用 GEOSITE/GEOIP 规则启动时代理还没建立（鸡生蛋），必须保证直连可达。
+    (config as any)['geox-url'] = {
+      geoip: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat',
+      geosite: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat',
+      mmdb: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb',
+      asn: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb',
+    };
     const proxies = (config as any).proxies as Record<string, unknown>[];
     const names = proxies.map((p: any) => String(p.name));
     (config as any)['proxy-groups'] = [

@@ -52,7 +52,8 @@ export type IssueCode =
   | 'KERNEL_LIMIT'          // 内核能力限制
   | 'DUPLICATE'             // 与已有节点重复
   | 'RENAMED'               // 重名节点写入配置时 tag 重命名（内核要求唯一）
-  | 'SECURITY';             // 安全提示（含外链、未自动执行等）
+  | 'SECURITY'              // 安全提示（含外链、未自动执行等）
+  | 'ENHANCED';             // 自动增强配置（如按内核能力追加国内直连规则）
 
 export interface ParseIssue {
   level: 'error' | 'warning' | 'info';

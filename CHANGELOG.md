@@ -12,6 +12,11 @@
 > **唯一真源是 `package.json` 的 `version`**，界面、窗口标题、安装器、打包产物名全部从它派生。
 > 升级请用 `npm run bump -- patch "一句话说明"`，脚本会同时改 `package.json`、重新生成 `install.ps1`、并在本文件插入条目。
 
+## [1.3.0] - 2026-11-20
+
+### 新增
+- Mihomo 内核自动追加国内全量直连（GEOSITE:cn/GEOIP:cn，插在兜底规则之前且不覆盖手动配置）；geo 数据源改 jsdelivr 镜像避免首次启动直连 GitHub 失败
+
 ## [1.2.0] - 2026-11-19
 
 ### 新增

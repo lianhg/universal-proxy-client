@@ -81,6 +81,29 @@ t('isLegacyDefaultRules：旧默认三条识别为旧版，新默认与自定义
   assert.equal(R.isLegacyDefaultRules(customized), false, '用户改过的规则集必须原样保留');
   assert.equal(R.isLegacyDefaultRules([]), false);
 });
+t('Mihomo 自动追加国内全量直连，且在 MATCH 兜底之前；其它内核不追加', () => {
+  const b = R.buildRoutingForKernel(R.cloneRoutingConfig(), 'mihomo', vless.name);
+  const geositeIdx = b.items.indexOf('GEOSITE,cn,DIRECT,自动：国内域名全量直连');
+  const geoipIdx = b.items.indexOf('GEOIP,cn,DIRECT,no-resolve,自动：国内IP全量直连');
+  assert.ok(geositeIdx >= 0, 'Mihomo 应自动追加 GEOSITE:cn 直连');
+  assert.ok(geoipIdx >= 0, 'Mihomo 应自动追加 GEOIP:cn 直连');
+  const matchIdx = b.items.findIndex(x => typeof x === 'string' && x.startsWith('MATCH'));
+  assert.ok(matchIdx > geositeIdx && matchIdx > geoipIdx, '自动直连必须在 MATCH 兜底之前');
+  assert.ok(b.issues.some(i => i.level === 'info'), '追加行为必须写 info issue，不得静默');
+  for (const k of ['xray', 'sing-box']) {
+    const b2 = R.buildRoutingForKernel(R.cloneRoutingConfig(), k, vless.name);
+    const hasGeo = b2.items.some(x => JSON.stringify(x).includes('geosite') || JSON.stringify(x).includes('geoip'));
+    assert.equal(hasGeo, false, `${k} 无 geo 资源，不应追加全量直连`);
+  }
+});
+t('autoCnDirect=false 或用户已有 cn 规则时不重复追加', () => {
+  const off = R.buildRoutingForKernel(R.cloneRoutingConfig({ autoCnDirect: false }), 'mihomo', vless.name);
+  assert.equal(off.items.some(x => typeof x === 'string' && x.startsWith('GEOSITE,cn')), false, '关闭开关后不应追加');
+  const manual = R.cloneRoutingConfig({ rules: [R.createRule({ kind: 'GEOSITE', payload: 'cn', action: 'DIRECT' }), R.createRule({ kind: 'GEOIP', payload: 'cn', action: 'DIRECT' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
+  const b = R.buildRoutingForKernel(manual, 'mihomo', vless.name);
+  assert.equal(b.items.filter(x => typeof x === 'string' && x.startsWith('GEOSITE,cn')).length, 1, '用户已配 GEOSITE:cn 时不重复追加');
+  assert.equal(b.items.filter(x => typeof x === 'string' && x.startsWith('GEOIP,cn')).length, 1, '用户已配 GEOIP:cn 时不重复追加');
+});
 t('Xray DOMAIN-SUFFIX 转成 domain: 前缀', () => {
   const cfg = R.cloneRoutingConfig({ rules: [R.createRule({ kind: 'DOMAIN-SUFFIX', payload: 'google.com', action: 'PROXY' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
   const b = R.buildRoutingForKernel(cfg, 'xray', vless.name);
@@ -93,7 +116,7 @@ t('sing-box DOMAIN-SUFFIX 转成 domain_suffix', () => {
   assert.equal(b.items[0].outbound, 'direct');
 });
 t('Mihomo 输出 Clash 规则字符串，REJECT 可用', () => {
-  const cfg = R.cloneRoutingConfig({ rules: [R.createRule({ kind: 'DOMAIN', payload: 'ads.example', action: 'REJECT' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
+  const cfg = R.cloneRoutingConfig({ autoCnDirect: false, rules: [R.createRule({ kind: 'DOMAIN', payload: 'ads.example', action: 'REJECT' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
   const b = R.buildRoutingForKernel(cfg, 'mihomo', vless.name);
   assert.equal(b.items[0], 'DOMAIN,ads.example,REJECT');
   assert.equal(b.items[1], 'MATCH,PROXY');
@@ -155,7 +178,7 @@ t('带自定义规则：Xray routing.rules 含 domain 规则', () => {
   assert.ok(r.config.routing.rules.some(x => JSON.stringify(x.domain ?? []).includes('example.com')));
 });
 t('带自定义规则：Mihomo rules 含用户规则且保留兜底', () => {
-  const cfg = R.cloneRoutingConfig({ rules: [R.createRule({ kind: 'DOMAIN', payload: 'ads.example', action: 'REJECT' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
+  const cfg = R.cloneRoutingConfig({ autoCnDirect: false, rules: [R.createRule({ kind: 'DOMAIN', payload: 'ads.example', action: 'REJECT' }), R.createRule({ kind: 'MATCH', action: 'PROXY' })] });
   const r = C.buildRuntimeConfig(vless, 'mihomo', settings(), [], cfg);
   assert.ok(r.config.rules.includes('DOMAIN,ads.example,REJECT'));
   assert.equal(r.config.rules.at(-1), 'MATCH,PROXY');
