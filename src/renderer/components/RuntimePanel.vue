@@ -44,7 +44,10 @@ onMounted(() => store.installRuntimeEvents())
 
 function pickNode(id: string) {
   const n = store.nodes.find(x => x.id === id)
-  if (n?.kernel) selectedKernel.value = n.kernel
+  // 用户手动选的内核优先；只有该节点不支持时才跟随节点的体检推荐
+  if (n && n.kernels.length && !n.kernels.includes(selectedKernel.value) && n.kernel) {
+    selectedKernel.value = n.kernel
+  }
 }
 
 async function setMode(key: RuntimeMode) {

@@ -519,3 +519,13 @@ export function capabilityTable(): Array<{ protocol: Protocol; label: string; xr
     ...caps,
   }));
 }
+
+/**
+ * 连接内核的最终裁决：用户显式选择的内核优先，节点不支持时才回落到体检推荐的内核。
+ * 此前连接逻辑是 `node.kernel ?? kernel.value`——体检推荐的内核（按协议评分第一个可用项）
+ * 恒定覆盖用户在设置页的手动选择，导致「UI 上选了 Mihomo，连出去还是 Xray」。
+ */
+export function resolveKernelForNode(node: Pick<UnifiedNode, 'kernels' | 'kernel'>, preferred: KernelType): KernelType {
+  if (node.kernels?.includes(preferred)) return preferred;
+  return node.kernel ?? preferred;
+}

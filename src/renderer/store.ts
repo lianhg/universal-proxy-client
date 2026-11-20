@@ -8,6 +8,7 @@ import {
   emptyTelemetry, type ProbeReport, type ProbeResult, type TelemetrySnapshot,
 } from '../core/runtime/telemetry.js'
 import { cloneRoutingConfig, isLegacyDefaultRules, type RoutingConfig } from '../core/runtime/rules.js'
+import { resolveKernelForNode } from '../core/hub/kernel.js'
 import type { SpeedTestOptions, SpeedTestRow } from '../core/runtime/speedtest.js'
 import { DEFAULT_SPEEDTEST_OPTIONS } from '../core/runtime/speedtest.js'
 import * as runtimeApi from './api.js'
@@ -55,7 +56,16 @@ export const useAppStore = defineStore('app', () => {
   const activeTab = ref<TabKey>('home')
   const lastReport = ref<ImportReport | null>(null)
   const logs = ref<LogEntry[]>([])
-  const kernel = ref<KernelType>('xray')
+  /* 内核选择：持久化到 localStorage，重启客户端不丢（此前是内存态默认 xray，重启必回 xray） */
+  const KERNEL_KEY = 'upc.kernel.v1'
+  function loadKernel(): KernelType {
+    const saved = localStorage.getItem(KERNEL_KEY)
+    return saved === 'xray' || saved === 'sing-box' || saved === 'mihomo' ? saved : 'xray'
+  }
+  const kernel = ref<KernelType>(loadKernel())
+  watch(kernel, k => {
+    try { localStorage.setItem(KERNEL_KEY, k) } catch { /* 存储不可用时本次会话仍有效 */ }
+  })
 
   /* ───────── 本地持久化：节点与订阅刷新后不丢（自动更新的前提） ───────── */
   const DATA_KEY = 'upc.data.v1'
@@ -252,9 +262,9 @@ export const useAppStore = defineStore('app', () => {
     if (runtimeBusy.value) return false
     runtimeBusy.value = true
     try {
-      // 以目标节点支持的内核为准：首页 / 测速页点一个 sing-box 专用节点时，
-      // 若还用界面当前选中的 xray 去启动，只会拿到「Hysteria2 不能由 xray 承载」。
-      const targetKernel = node.kernel ?? kernel.value
+      // 用户显式选择的内核优先；节点不支持该内核时才回落到体检推荐
+      // （如 sing-box 专用节点选不了 xray）。此前 node.kernel 恒定覆盖手动选择。
+      const targetKernel = resolveKernelForNode(node, kernel.value)
       const r = await runtimeApi.runtimeStart({ node, peers, kernel: targetKernel, routing: routingConfig.value })
       runtime.value = r.status
       if (r.ok) {
@@ -299,7 +309,8 @@ export const useAppStore = defineStore('app', () => {
       }
       return { ok: await switchNode(node, peersFor(node)), already: false }
     }
-    kernel.value = node.kernel ?? kernel.value
+    // 仅当用户当前选的内核不被该节点支持时才切到体检推荐，尊重手动选择
+    if (!node.kernels.includes(kernel.value)) kernel.value = node.kernel ?? kernel.value
     return { ok: await connect(node, peersFor(node)), already: false }
   }
 
@@ -344,7 +355,7 @@ export const useAppStore = defineStore('app', () => {
     runtimeBusy.value = true
     try {
       const r = await runtimeApi.runtimeSwitchNode({
-        node, peers, kernel: node.kernel ?? kernel.value, routing: routingConfig.value,
+        node, peers, kernel: resolveKernelForNode(node, kernel.value), routing: routingConfig.value,
       })
       runtime.value = r.status
       if (r.ok) {

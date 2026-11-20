@@ -8,7 +8,7 @@
  */
 import assert from 'node:assert/strict';
 import { makeNode } from '../.runtime-build/hub/util.js';
-import { KERNEL_MATRIX, buildSingBoxOutbound, buildMihomoProxy } from '../.runtime-build/hub/kernel.js';
+import { KERNEL_MATRIX, buildSingBoxOutbound, buildMihomoProxy, resolveKernelForNode } from '../.runtime-build/hub/kernel.js';
 import { buildRuntimeConfig } from '../.runtime-build/runtime/config-builder.js';
 import * as R from '../.runtime-build/runtime/rules.js';
 import { mergeRuntimeSettings } from '../.runtime-build/runtime/types.js';
@@ -56,6 +56,16 @@ t('能力矩阵：sing-box / mihomo 原生承载 wireguard', () => {
 });
 
 /* ─────────────── Xray 配置纯净性 ─────────────── */
+
+t('内核裁决：用户手动选择优先，节点不支持才回落体检推荐', () => {
+  const ssNode = { kernels: ['xray', 'sing-box', 'mihomo'], kernel: 'xray' };
+  assert.equal(resolveKernelForNode(ssNode, 'mihomo'), 'mihomo', '用户选 mihomo 且节点兼容 → mihomo');
+  assert.equal(resolveKernelForNode(ssNode, 'xray'), 'xray', '用户选 xray → xray');
+  const hysteria2Node = { kernels: ['sing-box'], kernel: 'sing-box' };
+  assert.equal(resolveKernelForNode(hysteria2Node, 'xray'), 'sing-box', '节点不支持 xray → 回落体检推荐');
+  const noRec = { kernels: [], kernel: null };
+  assert.equal(resolveKernelForNode(noRec, 'mihomo'), 'mihomo', '无推荐内核时保留用户选择');
+});
 
 t('选中 vless + peers 含 wireguard：Xray outbounds 不得出现 wireguard', () => {
   const v = vlessNode();
