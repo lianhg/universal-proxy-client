@@ -91,7 +91,7 @@ try {
   if (-not (Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }
   $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
   Set-ItemProperty -Path $regPath -Name 'DisplayName'     -Value $AppName
-  Set-ItemProperty -Path $regPath -Name 'DisplayVersion'  -Value '1.4.1'
+  Set-ItemProperty -Path $regPath -Name 'DisplayVersion'  -Value '1.5.0'
   Set-ItemProperty -Path $regPath -Name 'Publisher'       -Value 'Universal Proxy Client'
   Set-ItemProperty -Path $regPath -Name 'InstallLocation' -Value $DestDir
   Set-ItemProperty -Path $regPath -Name 'DisplayIcon'     -Value "$exePath,0"

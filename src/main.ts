@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, nativeTheme } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, nativeTheme, Tray, Menu, nativeImage } from 'electron'
 import path from 'path'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -42,6 +42,49 @@ process.on('unhandledRejection', (reason) => {
 log(`--- app start --- electron=${process.versions.electron} node=${process.versions.node} argv=${process.argv.join(' ')}`)
 
 let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
+
+/* ---------------------------------------------------------------- 系统托盘
+ * 最小化 / 关闭都隐藏到托盘（右下角），点托盘图标恢复——
+ * 代理客户端常驻后台是刚需：误点 X 不该把代理断掉。
+ */
+function trayIconPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.ico')
+    : path.join(app.getAppPath(), 'build', 'icon.ico')
+}
+
+function showMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow()
+    return
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+}
+
+function createTray(): void {
+  if (tray) return
+  try {
+    const icon = nativeImage.createFromPath(trayIconPath())
+    tray = new Tray(icon.resize({ width: 16, height: 16 }))
+    tray.setToolTip(`万能代理客户端 v${app.getVersion()}`)
+    tray.on('click', () => {
+      // 左键：窗口可见时收起，隐藏时恢复（切换）
+      if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.hide()
+      else showMainWindow()
+    })
+    tray.setContextMenu(Menu.buildFromTemplate([
+      { label: '显示主窗口', click: () => showMainWindow() },
+      { type: 'separator' },
+      { label: `退出（v${app.getVersion()}）`, click: () => app.quit() },
+    ]))
+    log('tray created')
+  } catch (err) {
+    log(`tray create failed: ${(err as Error)?.stack || err}`)
+  }
+}
 
 /**
  * 内核运行层实例。所有改动系统状态的操作都必须经过它，
@@ -112,6 +155,19 @@ function createWindow() {
   })
   mainWindow.webContents.on('did-finish-load', () => log('did-finish-load'))
 
+  /* 最小化 / 关闭不退出：隐藏到托盘，代理持续运行；真正的退出走托盘菜单 → before-quit
+   * 注：electron.d.ts 把 minimize 的 listener 标成了无参（实际运行时会传 event），此处断言绕过 */
+  mainWindow.on('minimize', ((e: Event) => {
+    if (quitting) return
+    e.preventDefault()
+    mainWindow?.hide()
+  }) as () => void)
+  mainWindow.on('close', (e) => {
+    if (quitting) return
+    e.preventDefault()
+    mainWindow?.hide()
+    log('window hidden to tray (close intercepted)')
+  })
   mainWindow.on('closed', () => { mainWindow = null })
 }
 
@@ -120,6 +176,7 @@ app.whenReady().then(() => {
   log('app ready')
   try {
     createWindow()
+    createTray()
     log(`window created · userData=${app.getPath('userData')}`)
   } catch (err) {
     log(`createWindow failed: ${(err as Error)?.stack || err}`)
