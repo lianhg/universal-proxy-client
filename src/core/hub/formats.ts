@@ -14,7 +14,7 @@ import type {
   Transport, UnifiedNode,
 } from './model.js';
 import {
-  decodeBase64Utf8, encodeBase64Utf8, isLikelyBase64, issue, makeNode, parseQuery,
+  decodeBase64Utf8, encodeBase64Utf8, isLikelyBase64, issue, looksLikeSSBody, makeNode, parseQuery,
   qStr, requireFields, safeJson, splitHostPort, isProxyLikeHttpUrl,
 } from './util.js';
 import { isShareLink, normAlpn, normSecurity, normTransport, parseShareLink, parseShareLinks } from './share-links.js';
@@ -183,6 +183,14 @@ export function detectFormat(text: string): DetectResult {
   }
   if (lines.length === 1 && /^[a-z][a-z0-9+.-]*:\/\//i.test(lines[0])) {
     return { format: 'unknown', label: '不支持的链接协议', detail: `前缀 ${lines[0].split(':')[0]} 不在支持列表内` };
+  }
+  // 缺协议头的 Shadowsocks 链接主体（网页复制剥离 ss:// 是高频场景）：整体都像 SIP002 主体时
+  // 转交分享链接通道，parseShareLink 会自动补全 ss://；认不出就不进这里，维持 unknown 拒绝。
+  if (lines.length > 1 && lines.every(l => looksLikeSSBody(l))) {
+    return { format: 'share-link-batch', label: 'Shadowsocks 分享链接（批量，缺 ss:// 协议头）', detail: `共 ${lines.length} 行，自动补全协议头解析` };
+  }
+  if (lines.length === 1 && looksLikeSSBody(lines[0])) {
+    return { format: 'share-link', label: 'Shadowsocks 分享链接（缺 ss:// 协议头）', detail: 'SIP002 主体，自动补全协议头解析' };
   }
   return { format: 'unknown', label: '无法识别的内容', detail: '既不是分享链接、订阅内容，也不是已知配置文件格式；不会伪装成导入成功' };
 }

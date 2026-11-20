@@ -13,8 +13,8 @@ import type {
   DetectedFormat, ParseIssue, Protocol, RejectedItem, Security, Transport, UnifiedNode,
 } from './model.js';
 import {
-  decodeBase64Utf8, issue, makeNode, mapFields, parseQuery, qBool,
-  qStr, requireFields, safeJson, safeURL, splitHostPort, stripFragment, isProxyLikeHttpUrl,
+  decodeBase64Bytes, decodeBase64Utf8, issue, looksLikeSSBody, makeNode, mapFields, parseQuery, qBool,
+  qStr, requireFields, safeJson, safeURL, splitHostPort, SS_METHOD_RE, stripFragment, isProxyLikeHttpUrl,
 } from './util.js';
 
 export interface LinkContext {
@@ -403,10 +403,30 @@ function parseSS(raw: string, ctx: LinkContext): UnifiedNode {
   }
   // userinfo 可能是 method:password 明文，也可能是方法+密码的 Base64（SIP002）
   let methodPass = userinfo;
+  let passwordLossy = false;
   const uDecoded = decodeBase64Utf8(decodeURIComponent(userinfo));
   if (uDecoded && uDecoded.includes(':')) methodPass = uDecoded;
   else {
-    try { methodPass = decodeURIComponent(userinfo); } catch { /* 保留 */ }
+    // 字节级兜底：Base64 解出的字节解不成 UTF-8（网页复制截断/密码含非文本字节）时，
+    // 取首个冒号前的 ASCII 方法名，密码按 latin1 逐字节还原——尽力保留原始字节而不是直接拒绝
+    let bytes: Uint8Array | null = null;
+    try { bytes = decodeBase64Bytes(decodeURIComponent(userinfo)); } catch { bytes = null; }
+    if (bytes) {
+      const bColon = bytes.indexOf(0x3a);
+      if (bColon > 0) {
+        let bMethod = '';
+        for (let i = 0; i < bColon; i++) bMethod += String.fromCharCode(bytes[i]);
+        if (SS_METHOD_RE.test(bMethod)) {
+          let bPassword = '';
+          for (let i = bColon + 1; i < bytes.length; i++) bPassword += String.fromCharCode(bytes[i]);
+          methodPass = bMethod + ':' + bPassword;
+          passwordLossy = true;
+        }
+      }
+    }
+    if (!passwordLossy) {
+      try { methodPass = decodeURIComponent(userinfo); } catch { /* 保留 */ }
+    }
   }
   const colon = methodPass.indexOf(':');
   if (colon < 0) throw new LinkError('Shadowsocks 无法拆出 method:password（加密方式或密码缺失）');
@@ -435,6 +455,12 @@ function parseSS(raw: string, ctx: LinkContext): UnifiedNode {
     node.lossless = false;
     node.issues.push(issue('warning', 'UNKNOWN_FIELD',
       `Shadowsocks 查询参数 ${Object.keys(extras).join('、')} 未映射，原值已保留`, { location: ctx.location }));
+  }
+  if (passwordLossy) {
+    node.lossless = false;
+    node.issues.push(issue('warning', 'PARTIAL_COMPAT',
+      '分享链接的密码 Base64 无法解码为 UTF-8 文本（复制截断或含非文本字节），已按原始字节尽力还原；若连接失败请重新复制完整链接',
+      { field: 'password', location: ctx.location }));
   }
   if (!SS_METHODS.has(method.toLowerCase())) {
     node.issues.push(issue('warning', 'PARTIAL_COMPAT',
@@ -700,23 +726,31 @@ export function parseShareLink(raw: string, ctx: LinkContext = {}): LinkOutcome 
     } } as LinkOutcome;
   }
 
-  const lower = text.toLowerCase();
+  // 容错：识别丢失 ss:// 协议头的链接主体并自动补全（复制源网页剥离协议头是高频场景）
+  let candidate = text;
+  let schemeRepaired = false;
+  if (looksLikeSSBody(text)) {
+    candidate = 'ss://' + text;
+    schemeRepaired = true;
+  }
+
+  const lower = candidate.toLowerCase();
   try {
     let node: UnifiedNode;
-    if (lower.startsWith('vmess://')) node = parseVMess(text, ctx);
-    else if (lower.startsWith('vless://')) node = parseVLESS(text, ctx);
-    else if (lower.startsWith('trojan://')) node = parseTrojan(text, ctx);
-    else if (lower.startsWith('ss://')) node = parseSS(text, ctx);
-    else if (lower.startsWith('ssr://')) node = parseSSR(text, ctx);
-    else if (/^socks(4|4a|5|5h)?:\/\//.test(lower)) node = parseSocks(text, ctx);
-    else if (lower.startsWith('http://') || lower.startsWith('https://')) node = parseHttpProxy(text, ctx);
-    else if (lower.startsWith('hysteria2://') || lower.startsWith('hy2://')) node = parseHysteria(text, ctx, true);
-    else if (lower.startsWith('hysteria://')) node = parseHysteria(text, ctx, false);
-    else if (lower.startsWith('tuic://')) node = parseTUIC(text, ctx);
-    else if (lower.startsWith('wireguard://') || lower.startsWith('wg://')) node = parseWireGuardLink(text, ctx);
-    else if (lower.startsWith('anytls://')) node = parseAnyTLS(text, ctx);
-    else if (lower.startsWith('naive://') || lower.startsWith('naive+https://') || lower.startsWith('naive+quic://')) node = parseNaive(text, ctx);
-    else if (lower.startsWith('ssh://')) node = parseSSH(text, ctx);
+    if (lower.startsWith('vmess://')) node = parseVMess(candidate, ctx);
+    else if (lower.startsWith('vless://')) node = parseVLESS(candidate, ctx);
+    else if (lower.startsWith('trojan://')) node = parseTrojan(candidate, ctx);
+    else if (lower.startsWith('ss://')) node = parseSS(candidate, ctx);
+    else if (lower.startsWith('ssr://')) node = parseSSR(candidate, ctx);
+    else if (/^socks(4|4a|5|5h)?:\/\//.test(lower)) node = parseSocks(candidate, ctx);
+    else if (lower.startsWith('http://') || lower.startsWith('https://')) node = parseHttpProxy(candidate, ctx);
+    else if (lower.startsWith('hysteria2://') || lower.startsWith('hy2://')) node = parseHysteria(candidate, ctx, true);
+    else if (lower.startsWith('hysteria://')) node = parseHysteria(candidate, ctx, false);
+    else if (lower.startsWith('tuic://')) node = parseTUIC(candidate, ctx);
+    else if (lower.startsWith('wireguard://') || lower.startsWith('wg://')) node = parseWireGuardLink(candidate, ctx);
+    else if (lower.startsWith('anytls://')) node = parseAnyTLS(candidate, ctx);
+    else if (lower.startsWith('naive://') || lower.startsWith('naive+https://') || lower.startsWith('naive+quic://')) node = parseNaive(candidate, ctx);
+    else if (lower.startsWith('ssh://')) node = parseSSH(candidate, ctx);
     else {
       return { rejected: {
         raw: text,
@@ -728,6 +762,9 @@ export function parseShareLink(raw: string, ctx: LinkContext = {}): LinkOutcome 
 
     if (!node.server || !Number.isFinite(node.port) || node.port <= 0) {
       node.issues.push(issue('error', 'MISSING_REQUIRED', '服务器地址或端口无效', { location }));
+    }
+    if (schemeRepaired) {
+      node.issues.push(issue('info', 'ENHANCED', '粘贴内容缺少 ss:// 协议头（复制源网页剥离所致），已按 Shadowsocks 分享链接主体自动补全解析', { location }));
     }
     return { node };
   } catch (e) {

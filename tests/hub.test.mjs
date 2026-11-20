@@ -437,6 +437,34 @@ if (qrMod) {
   });
 }
 
+/* ------------------------------ 缺协议头自动补全 ------------------------------ */
+
+t('丢失 ss:// 协议头的 SIP002 主体自动补全解析（网页复制剥离协议头）', () => {
+  const bodyless = b64('aes-256-gcm:password123') + '@203.0.113.72:19999#SS-repair-test';
+  const r = H.importText(bodyless);
+  assert.equal(r.nodes.length, 1, `应导入成功：${JSON.stringify(r.rejected)}`);
+  assert.equal(r.nodes[0].protocol, 'ss');
+  assert.equal(r.nodes[0].server, '203.0.113.72');
+  assert.equal(r.nodes[0].port, 19999);
+  assert.equal(r.nodes[0].password, 'password123');
+  assert.equal(r.nodes[0].name.includes('SS-repair-test'), true, '片段名应保留');
+});
+
+t('丢失协议头 + 密码 base64 解不出 UTF-8 时仍能按 ASCII 方法名识别', () => {
+  // 密码用非 UTF-8 字节（0xFF 0xFE），base64 解码后 TextDecoder 产出 U+FFFD → decodeBase64Utf8 返回 null
+  const pwBytes = Buffer.from([0x70, 0x61, 0xff, 0xfe, 0x73, 0x73]);
+  const bodyless = Buffer.concat([Buffer.from('aes-256-gcm:'), pwBytes]).toString('base64') + '@1.2.3.4:8388#odd';
+  const r = H.importText(bodyless);
+  assert.equal(r.nodes.length, 1, `ASCII 方法名兜底应识别成功：${JSON.stringify(r.rejected)}`);
+  assert.equal(r.nodes[0].protocol, 'ss');
+});
+
+t('无协议头但不像 ss 主体的内容不误补，维持原拒绝行为', () => {
+  const r = H.importText('totally-unknown-content');
+  assert.equal(r.nodes.length, 0);
+  assert.equal(r.rejected.length, 1);
+});
+
 console.log(`\n===== 结果：${pass} 通过 / ${fail} 失败 =====`);
 if (failures.length) {
   console.log('\n失败详情：');

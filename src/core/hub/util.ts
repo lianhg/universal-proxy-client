@@ -353,3 +353,41 @@ export function buildReport(
     ...(requiresFetch ? { requiresFetch } : {}),
   };
 }
+
+/** Shadowsocks 已知加密方法前缀（用于识别丢失协议头的 ss 链接主体） */
+export const SS_METHOD_RE = /^(aes-\d{3}-gcm|aes-\d{3}-cfb|chacha20-ietf-poly1305|chacha20-poly1305|chacha20-ietf|chacha20|xchacha20-poly1305|xchacha20|rc4-md5|rc4|salsa20|bf-cfb|2022-blake3-[a-z0-9-]+|none|plain)/i;
+
+/**
+ * 判断一段「无协议头」文本是否为 ss 分享链接的主体：
+ * SIP002 形态  base64(method:pass)@host:port/?plugin=...#name
+ * 网页站复制分享链接时经常把 ss:// 剥掉（反爬/复制保护），粘贴进来只剩主体。
+ * 只认窄口径：无空白、有 @host:port 结构、@ 前的 base64（或明文）能拆出已知加密方法——
+ * 认不出来就不补，绝不为了提高导入率放宽误判风险。
+ */
+export function looksLikeSSBody(text: string): boolean {
+  if (!text || /\s/.test(text) || text.includes('://')) return false;
+  const m = /^([A-Za-z0-9+/\-_.]+={0,3})@(\[[0-9a-fA-F:]+\]|[A-Za-z0-9._-]+):(\d{2,5})([/?#].*)?$/.exec(text);
+  if (!m) return false;
+  const userinfo = m[1];
+  const decoded = decodeBase64Utf8(userinfo);
+  let methodPass = '';
+  if (decoded && decoded.includes(':')) methodPass = decoded;
+  else {
+    // Base64 解不出 UTF-8 时（密码含非文本字节/复制截断），退而检查首个冒号前的
+    // ASCII 方法名是否为已知 SS 加密方法——密码部分乱码不影响结构判断
+    const bytes = decodeBase64Bytes(userinfo);
+    if (!bytes) {
+      try { methodPass = decodeURIComponent(userinfo); } catch { return false; }
+    } else {
+      const colonAt = bytes.indexOf(0x3a);
+      if (colonAt <= 0) return false;
+      let prefix = '';
+      for (let i = 0; i < colonAt; i++) prefix += String.fromCharCode(bytes[i]);
+      if (!/^[\x20-\x7e]+$/.test(prefix)) return false;
+      return SS_METHOD_RE.test(prefix);
+    }
+  }
+  const colon = methodPass.indexOf(':');
+  if (colon <= 0) return false;
+  return SS_METHOD_RE.test(methodPass.slice(0, colon));
+}
